@@ -2,6 +2,10 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import os
+
+output_dir = 'EDA/'
+os.makedirs(output_dir, exist_ok=True)
 
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
@@ -16,8 +20,9 @@ print(f"Testing set size: {test_df.shape}")
 
 # Pair Plots
 def create_pair_plots(df, numerical_features, categorical_feature):
-    sns.pairplot(df[numerical_features + [categorical_feature]], hue=categorical_feature)
+    plot = sns.pairplot(df[numerical_features + [categorical_feature]], hue=categorical_feature)
     plt.suptitle(f"Pair Plot - Numerical Features with {categorical_feature} as Hue", y=1.02)
+    plt.savefig(os.path.join(output_dir, f"pair_plot_{categorical_feature}.png"))
     plt.show()
 
 # Box plots for categorical features
@@ -30,6 +35,7 @@ def create_box_plots(df, categorical_features, numerical_feature):
         plt.title(f"Box Plot - {numerical_feature} by {category}")
     
     plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"box_plot_{numerical_feature}.png"))
     plt.show()
 
 # Violin Plots
@@ -42,6 +48,7 @@ def create_violin_plots(df, categorical_features, numerical_feature):
         plt.title(f"Violin Plot - {numerical_feature} by {category}")
     
     plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"violin_plot_{numerical_feature}.png"))
     plt.show()
 
 # Count Plots
@@ -54,6 +61,7 @@ def create_count_plots(df, features):
         plt.title(f"Count Plot - {feature}")
     
     plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, f"count_plot_{feature}.png"))
     plt.show()
 
 # Correlation heatmap
@@ -64,6 +72,7 @@ def create_correlation_heatmap(df):
     plt.figure(figsize=(12, 8))
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
     plt.title("Correlation Heatmap")
+    plt.savefig(os.path.join(output_dir, "correlation_heatmap.png"))
     plt.show()
 
 # Categorical features to analyze
