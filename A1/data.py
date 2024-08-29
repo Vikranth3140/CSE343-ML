@@ -105,8 +105,30 @@ plt.show()
 
 
 # Count plot for categorical features
-plt.figure(figsize=(10, 6))
+
+plt.figure(figsize=(20, 15))
+
+# Building_Type
+plt.subplot(2, 2, 1)
 sns.countplot(x='Building_Type', data=df)
+plt.title("Count Plot - Building Type")
+
+# Green_Certified
+plt.subplot(2, 2, 2)
+sns.countplot(x='Green_Certified', data=df)
+plt.title("Count Plot - Green Certified")
+
+# Building_Status
+plt.subplot(2, 2, 3)
+sns.countplot(x='Building_Status', data=df)
+plt.title("Count Plot - Building Status")
+
+# Maintenance_Priority
+plt.subplot(2, 2, 4)
+sns.countplot(x='Maintenance_Priority', data=df)
+plt.title("Count Plot - Maintenance Priority")
+
+plt.tight_layout()
 plt.show()
 
 
