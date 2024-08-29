@@ -104,6 +104,12 @@ plt.title("Violin Plot - Smart Devices Count by Building Type")
 plt.show()
 
 
+# Count plot for categorical features
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Building_Type', data=df)
+plt.show()
+
+
 # Correlation heatmap
 numeric_df = df.select_dtypes(include='number')
 corr_matrix = numeric_df.corr()
