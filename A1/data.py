@@ -25,7 +25,7 @@ def create_pair_plots(df, numerical_features, categorical_feature):
     plt.savefig(os.path.join(output_dir, f"pair_plot_{categorical_feature}.png"))
     plt.show()
 
-# Box plots for categorical features
+# Box Plots
 def create_box_plots(df, categorical_features, numerical_feature):
     plt.figure(figsize=(20, 15))
     
@@ -64,7 +64,7 @@ def create_count_plots(df, features):
     plt.savefig(os.path.join(output_dir, f"count_plot_{feature}.png"))
     plt.show()
 
-# Correlation heatmap
+# Correlation Heatmap
 def create_correlation_heatmap(df):
     numeric_df = df.select_dtypes(include='number')
     corr_matrix = numeric_df.corr()
@@ -75,24 +75,17 @@ def create_correlation_heatmap(df):
     plt.savefig(os.path.join(output_dir, "correlation_heatmap.png"))
     plt.show()
 
-# Categorical features to analyze
 categorical_features = ['Building_Type', 'Green_Certified', 'Building_Status', 'Maintenance_Priority']
 
-# Numerical features to use in pair plots
 numerical_features = ['Electricity_Bill', 'Energy_Consumption_Per_SqM', 'Number_of_Floors', 'Number_of_Residents']
 
-# Create Pair Plots with Categorical Hue
 for category in categorical_features:
     create_pair_plots(df, numerical_features, category)
 
-# Create Box Plots for Categorical Features
 create_box_plots(df, categorical_features, 'Electricity_Bill')
 
-# Create Violin Plots for Categorical Features
 create_violin_plots(df, categorical_features, 'Electricity_Bill')
 
-# Create Count Plots for Categorical Features
 create_count_plots(df, categorical_features)
 
-# Create Correlation Heatmap
 create_correlation_heatmap(df)
