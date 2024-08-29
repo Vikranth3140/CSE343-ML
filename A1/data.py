@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 df = pd.read_csv('Electricity Bill.csv')
+df.columns = df.columns.str.strip()
 
 # Split the dataset into 80:20 train and test splits
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
@@ -15,7 +16,7 @@ print(f"Testing set size: {test_df.shape}")
 
 # Pair Plots
 def create_pair_plots(df, feature_group, title):
-    sns.pairplot(df[feature_group], hue='Building_Type')
+    sns.pairplot(df[feature_group + ['Building_Type']], hue='Building_Type')
     plt.suptitle(title, y=1.02)
     plt.show()
 
