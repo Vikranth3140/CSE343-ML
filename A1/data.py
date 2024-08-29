@@ -15,51 +15,36 @@ print(f"Testing set size: {test_df.shape}")
 # EDA
 
 # Pair Plots
-def create_pair_plots(df, feature_group, title):
-    sns.pairplot(df[feature_group + ['Building_Type']], hue='Building_Type')
-    plt.suptitle(title, y=1.02)
+def create_pair_plots(df, numerical_features, categorical_feature):
+    sns.pairplot(df[numerical_features + [categorical_feature]], hue=categorical_feature)
+    plt.suptitle(f"Pair Plot - Numerical Features with {categorical_feature} as Hue", y=1.02)
     plt.show()
 
-# Building characteristics features
-group_1 = ['Construction_Year', 'Number_of_Floors', 'Energy_Consumption_Per_SqM', 'Number_of_Residents']
-create_pair_plots(df, group_1, "Pair Plot - Building Characteristics")
-
-# Environmental factors features
-group_2 = ['Water_Usage_Per_Building', 'Waste_Recycled_Percentage', 'Indoor_Air_Quality', 'Energy_Per_SqM']
-create_pair_plots(df, group_2, "Pair Plot - Environmental Factors")
-
-# Energy and maintenance features
-group_3 = ['Electricity_Bill', 'Energy_Consumption_Per_SqM', 'Maintenance_Resolution_Time', 'Smart_Devices_Count']
-create_pair_plots(df, group_3, "Pair Plot - Energy and Maintenance")
-
-# Box plots for each numerical feature
-plt.figure(figsize=(12, 8))
-df.boxplot()
-plt.xticks(rotation=45)
-plt.title("Box Plot for Numerical Features")
-plt.show()
+# Box plots for categorical features
+def create_box_plots(df, categorical_features, numerical_feature):
+    plt.figure(figsize=(20, 15))
+    
+    for i, category in enumerate(categorical_features, 1):
+        plt.subplot(2, 2, i)
+        sns.boxplot(x=category, y=numerical_feature, data=df)
+        plt.title(f"Box Plot - {numerical_feature} by {category}")
+    
+    plt.tight_layout()
+    plt.show()
 
 # Violin Plots
-def create_violin_plots(df, features, category):
-    for feature in features:
-        plt.figure(figsize=(10, 6))
-        sns.violinplot(x=category, y=feature, data=df)
-        plt.title(f"Violin Plot - {feature} by {category}")
-        plt.show()
+def create_violin_plots(df, categorical_features, numerical_feature):
+    plt.figure(figsize=(20, 15))
+    
+    for i, category in enumerate(categorical_features, 1):
+        plt.subplot(2, 2, i)
+        sns.violinplot(x=category, y=numerical_feature, data=df)
+        plt.title(f"Violin Plot - {numerical_feature} by {category}")
+    
+    plt.tight_layout()
+    plt.show()
 
-# Violin Plots
-
-# Building characteristics features
-create_violin_plots(df, group_1, 'Building_Type')
-
-# Environmental factors features
-create_violin_plots(df, group_2, 'Building_Type')
-
-# Energy and maintenance features
-group_4 = ['Electricity_Bill', 'Maintenance_Resolution_Time', 'Smart_Devices_Count']
-create_violin_plots(df, group_4, 'Building_Type')
-
-# Count plot for categorical features
+# Count Plots
 def create_count_plots(df, features):
     plt.figure(figsize=(20, 15))
     
@@ -71,15 +56,34 @@ def create_count_plots(df, features):
     plt.tight_layout()
     plt.show()
 
-# Count plots
+# Correlation heatmap
+def create_correlation_heatmap(df):
+    numeric_df = df.select_dtypes(include='number')
+    corr_matrix = numeric_df.corr()
+
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+    plt.title("Correlation Heatmap")
+    plt.show()
+
+# Categorical features to analyze
 categorical_features = ['Building_Type', 'Green_Certified', 'Building_Status', 'Maintenance_Priority']
+
+# Numerical features to use in pair plots
+numerical_features = ['Electricity_Bill', 'Energy_Consumption_Per_SqM', 'Number_of_Floors', 'Number_of_Residents']
+
+# Create Pair Plots with Categorical Hue
+for category in categorical_features:
+    create_pair_plots(df, numerical_features, category)
+
+# Create Box Plots for Categorical Features
+create_box_plots(df, categorical_features, 'Electricity_Bill')
+
+# Create Violin Plots for Categorical Features
+create_violin_plots(df, categorical_features, 'Electricity_Bill')
+
+# Create Count Plots for Categorical Features
 create_count_plots(df, categorical_features)
 
-# Correlation heatmap
-numeric_df = df.select_dtypes(include='number')
-corr_matrix = numeric_df.corr()
-
-plt.figure(figsize=(12, 8))
-sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
-plt.title("Correlation Heatmap")
-plt.show()
+# Create Correlation Heatmap
+create_correlation_heatmap(df)
