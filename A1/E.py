@@ -10,8 +10,6 @@ from sklearn.pipeline import Pipeline
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
 
-# E
-
 # Handling missing values
 
 # Filling numerical values with the median
