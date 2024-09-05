@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.feature_selection import RFE
 
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
@@ -56,7 +55,7 @@ def evaluate_model(y_true, y_pred, X):
     mae = mean_absolute_error(y_true, y_pred)
     r2 = r2_score(y_true, y_pred)
     adj_r2 = adjusted_r2(r2, X.shape[0], X.shape[1])
-    
+
     return mse, rmse, mae, r2, adj_r2
 
 train_mse, train_rmse, train_mae, train_r2, train_adj_r2 = evaluate_model(y_train, y_train_pred, X_train)
@@ -75,36 +74,3 @@ print(f"  RMSE: {test_rmse:.4f}")
 print(f"  MAE: {test_mae:.4f}")
 print(f"  R²: {test_r2:.4f}")
 print(f"  Adjusted R²: {test_adj_r2:.4f}")
-
-# D
-
-# Recursive Feature Elimination (RFE) to select the 3 most important features
-rfe = RFE(model, n_features_to_select=3)
-rfe.fit(X, y)
-
-selected_features = X.columns[rfe.support_]
-print("\nSelected Features for RFE:", selected_features)
-
-X_selected_train, X_selected_test, y_train, y_test = train_test_split(X[selected_features], y, test_size=0.2, random_state=42)
-
-model.fit(X_selected_train, y_train)
-
-y_train_pred_rfe = model.predict(X_selected_train)
-y_test_pred_rfe = model.predict(X_selected_test)
-
-train_mse_rfe, train_rmse_rfe, train_mae_rfe, train_r2_rfe, train_adj_r2_rfe = evaluate_model(y_train, y_train_pred_rfe, X_selected_train)
-test_mse_rfe, test_rmse_rfe, test_mae_rfe, test_r2_rfe, test_adj_r2_rfe = evaluate_model(y_test, y_test_pred_rfe, X_selected_test)
-
-print("\nTrain Metrics (with RFE):")
-print(f"  MSE: {train_mse_rfe:.4f}")
-print(f"  RMSE: {train_rmse_rfe:.4f}")
-print(f"  MAE: {train_mae_rfe:.4f}")
-print(f"  R²: {train_r2_rfe:.4f}")
-print(f"  Adjusted R²: {train_adj_r2_rfe:.4f}")
-
-print("\nTest Metrics (with RFE):")
-print(f"  MSE: {test_mse_rfe:.4f}")
-print(f"  RMSE: {test_rmse_rfe:.4f}")
-print(f"  MAE: {test_mae_rfe:.4f}")
-print(f"  R²: {test_r2_rfe:.4f}")
-print(f"  Adjusted R²: {test_adj_r2_rfe:.4f}")
