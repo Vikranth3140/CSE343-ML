@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
 
-# D
+# E
 
 # Handling missing values
 
@@ -21,15 +21,13 @@ df.fillna(df.median(numeric_only=True), inplace=True)
 for col in df.select_dtypes(include='object').columns:
     df[col].fillna(df[col].mode()[0], inplace=True)
 
-# Separating features and target variable
 X = df.drop(columns=['Electricity_Bill'])
 y = df['Electricity_Bill']
 
-# Identifying categorical and numerical features
 categorical_features = X.select_dtypes(include='object').columns.tolist()
 numerical_features = X.select_dtypes(include=np.number).columns.tolist()
 
-# Preprocessing: One-Hot Encoding for categorical and StandardScaler for numerical
+# One-Hot Encoding for categorical and StandardScaler for numerical
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), numerical_features),
@@ -38,7 +36,7 @@ preprocessor = ColumnTransformer(
 # Apply Ridge Regression in a pipeline
 ridge_model = Pipeline(steps=[
     ('preprocessor', preprocessor),
-    ('ridge', Ridge(alpha=1.0))  # alpha is the regularization strength
+    ('ridge', Ridge(alpha=1.0))
 ])
 
 # Split the dataset into 80:20 train and test splits
@@ -47,7 +45,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Fit the Ridge Regression model
 ridge_model.fit(X_train, y_train)
 
-# Predictions
 y_train_pred_ridge = ridge_model.predict(X_train)
 y_test_pred_ridge = ridge_model.predict(X_test)
 
@@ -64,12 +61,9 @@ def evaluate_model(y_true, y_pred, X):
     
     return mse, rmse, mae, r2, adj_r2
 
-# Train Metrics
 train_mse_ridge, train_rmse_ridge, train_mae_ridge, train_r2_ridge, train_adj_r2_ridge = evaluate_model(y_train, y_train_pred_ridge, X_train)
-# Test Metrics
 test_mse_ridge, test_rmse_ridge, test_mae_ridge, test_r2_ridge, test_adj_r2_ridge = evaluate_model(y_test, y_test_pred_ridge, X_test)
 
-# Print Results for Ridge Regression
 print("Train Metrics (Ridge Regression with One-Hot Encoding):")
 print(f"  MSE: {train_mse_ridge:.4f}")
 print(f"  RMSE: {train_rmse_ridge:.4f}")
