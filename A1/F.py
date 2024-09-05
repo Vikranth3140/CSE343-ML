@@ -6,7 +6,6 @@ from sklearn.decomposition import FastICA
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
