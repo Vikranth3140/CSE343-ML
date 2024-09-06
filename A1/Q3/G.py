@@ -36,10 +36,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 X_train_preprocessed = preprocessor.fit_transform(X_train)
 X_test_preprocessed = preprocessor.transform(X_test)
 
-# Function to perform ElasticNet and return evaluation metrics
 def perform_elastic_net(alpha, X_train, X_test, y_train, y_test):
     # Apply ElasticNet
-    elastic_net = ElasticNet(alpha=alpha, l1_ratio=0.5, random_state=42)  # l1_ratio=0.5 balances L1 and L2 penalties
+    elastic_net = ElasticNet(alpha=alpha, l1_ratio=0.5, random_state=42)
     elastic_net.fit(X_train, y_train)
     
     y_train_pred = elastic_net.predict(X_train)
@@ -75,7 +74,6 @@ for alpha in alpha_values:
     result = perform_elastic_net(alpha, X_train_preprocessed, X_test_preprocessed, y_train, y_test)
     results.append(result)
 
-# Display results
 for res in results:
     print(f"\nResults for alpha={res['alpha']}:")
     print(f"Train MSE: {res['train_mse']:.4f}, RMSE: {res['train_rmse']:.4f}, MAE: {res['train_mae']:.4f}, R²: {res['train_r2']:.4f}, Adjusted R²: {res['train_adj_r2']:.4f}")
