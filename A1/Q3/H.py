@@ -6,7 +6,6 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.compose import ColumnTransformer
 
-# Load the dataset
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
 
@@ -19,15 +18,13 @@ df.fillna(df.median(numeric_only=True), inplace=True)
 for col in df.select_dtypes(include='object').columns:
     df[col].fillna(df[col].mode()[0], inplace=True)
 
-# Separating features and target variable
 X = df.drop(columns=['Electricity_Bill'])
 y = df['Electricity_Bill']
 
-# Identifying categorical and numerical features
 categorical_features = X.select_dtypes(include='object').columns.tolist()
 numerical_features = X.select_dtypes(include=np.number).columns.tolist()
 
-# Preprocessing: One-Hot Encoding for categorical and StandardScaler for numerical
+# One-Hot Encoding for categorical and StandardScaler for numerical
 preprocessor = ColumnTransformer(
     transformers=[
         ('num', StandardScaler(), numerical_features),
@@ -36,15 +33,13 @@ preprocessor = ColumnTransformer(
 # Split the dataset into 80:20 train and test splits
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Apply preprocessor to train and test sets
 X_train_preprocessed = preprocessor.fit_transform(X_train)
 X_test_preprocessed = preprocessor.transform(X_test)
 
-# Function to evaluate the model
 def adjusted_r2(r2, n, k):
-    """Function to calculate the adjusted R² score."""
     return 1 - ((1 - r2) * (n - 1) / (n - k - 1))
 
+# Evaluation Metrics
 def evaluate_model(y_true, y_pred, X):
     mse = mean_squared_error(y_true, y_pred)
     rmse = np.sqrt(mse)
@@ -58,16 +53,12 @@ def evaluate_model(y_true, y_pred, X):
 gbr_model = GradientBoostingRegressor(random_state=42)
 gbr_model.fit(X_train_preprocessed, y_train)
 
-# Predictions
 y_train_pred_gbr = gbr_model.predict(X_train_preprocessed)
 y_test_pred_gbr = gbr_model.predict(X_test_preprocessed)
 
-# Train Metrics
 train_mse_gbr, train_rmse_gbr, train_mae_gbr, train_r2_gbr, train_adj_r2_gbr = evaluate_model(y_train, y_train_pred_gbr, X_train_preprocessed)
-# Test Metrics
 test_mse_gbr, test_rmse_gbr, test_mae_gbr, test_r2_gbr, test_adj_r2_gbr = evaluate_model(y_test, y_test_pred_gbr, X_test_preprocessed)
 
-# Print Results for Gradient Boosting Regressor
 print("Train Metrics (Gradient Boosting Regressor):")
 print(f"  MSE: {train_mse_gbr:.4f}")
 print(f"  RMSE: {train_rmse_gbr:.4f}")
