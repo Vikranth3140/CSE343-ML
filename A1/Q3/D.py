@@ -18,10 +18,14 @@ df.fillna(df.median(numeric_only=True), inplace=True)
 for col in df.select_dtypes(include='object').columns:
     df[col].fillna(df[col].mode()[0], inplace=True)
 
-# Normalizing numerical features
-numerical_features = df.select_dtypes(include=np.number).columns
+# # Normalizing numerical features
+# numerical_features = df.select_dtypes(include=np.number).columns
+# scaler = StandardScaler()
+# df[numerical_features] = scaler.fit_transform(df[numerical_features])
+
+# Normalizing target variable (y)
 scaler = StandardScaler()
-df[numerical_features] = scaler.fit_transform(df[numerical_features])
+y = scaler.fit_transform(df[['Electricity_Bill']])
 
 # Encoding categorical features using LabelEncoder
 label_encoders = {}

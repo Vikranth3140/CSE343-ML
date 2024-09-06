@@ -25,10 +25,10 @@ y = df['Electricity_Bill']
 categorical_features = X.select_dtypes(include='object').columns.tolist()
 numerical_features = X.select_dtypes(include=np.number).columns.tolist()
 
-# One-Hot Encoding for categorical and StandardScaler for numerical
+# One-Hot Encoding for categorical
 preprocessor = ColumnTransformer(
     transformers=[
-        ('num', StandardScaler(), numerical_features),
+        ('num', 'passthrough', numerical_features),
         ('cat', OneHotEncoder(drop='first'), categorical_features)])
 
 # Apply Ridge Regression in a pipeline
