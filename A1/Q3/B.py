@@ -2,7 +2,6 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from umap import UMAP
 import matplotlib.pyplot as plt
-import umap
 import os
 
 umap_dir = 'UMAP/'
