@@ -7,16 +7,13 @@ import os
 umap_dir = 'UMAP/'
 os.makedirs(umap_dir, exist_ok=True)
 
-# Load the dataset
 data = pd.read_csv('Electricity Bill.csv')
 
-# Label Encoding categorical features
 label_encoder = LabelEncoder()
 categorical_columns = ['Building_Type', 'Building_Status', 'Maintenance_Priority', 'Green_Certified']
 for col in categorical_columns:
     data[col] = label_encoder.fit_transform(data[col])
 
-# Prepare features for UMAP (excluding target 'Electricity_Bill')
 features = data.drop(columns=['Electricity_Bill'])
 
 # Apply UMAP to reduce to 2 dimensions
