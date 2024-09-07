@@ -62,7 +62,7 @@ def logistic_regression(X, y, X_val, y_val, lr=0.1, iterations=10):
         
         val_accuracy = np.mean((val_pred >= 0.5) == y_val)
         val_accuracies.append(val_accuracy)
-
+        
         print(f"Iteration {i+1}/{iterations}")
         print(f"Training Loss: {train_loss:.4f}, Training Accuracy: {train_accuracy:.4f}")
         print(f"Validation Loss: {val_loss:.4f}, Validation Accuracy: {val_accuracy:.4f}")
