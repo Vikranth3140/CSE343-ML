@@ -67,7 +67,7 @@ def perform_elastic_net(alpha, X_train, X_test, y_train, y_test):
     }
 
 # Try ElasticNet with different alpha values
-alpha_values = [0.1, 0.5, 1.0, 5.0, 10.0]
+alpha_values = [0.1, 0.05, 0.001, 1.005, 1.0005]
 results = []
 
 for alpha in alpha_values:
@@ -76,5 +76,5 @@ for alpha in alpha_values:
 
 for res in results:
     print(f"\nResults for alpha={res['alpha']}:")
-    print(f"Train MSE: {res['train_mse']:.4f}, RMSE: {res['train_rmse']:.4f}, MAE: {res['train_mae']:.4f}, R²: {res['train_r2']:.4f}, Adjusted R²: {res['train_adj_r2']:.4f}")
-    print(f"Test  MSE: {res['test_mse']:.4f}, RMSE: {res['test_rmse']:.4f}, MAE: {res['test_mae']:.4f}, R²: {res['test_r2']:.4f}, Adjusted R²: {res['test_adj_r2']:.4f}")
+    print(f"Train MSE: {res['train_mse']}, RMSE: {res['train_rmse']}, MAE: {res['train_mae']}, R²: {res['train_r2']}, Adjusted R²: {res['train_adj_r2']}")
+    print(f"Test  MSE: {res['test_mse']}, RMSE: {res['test_rmse']}, MAE: {res['test_mae']}, R²: {res['test_r2']}, Adjusted R²: {res['test_adj_r2']}")

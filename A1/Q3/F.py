@@ -82,5 +82,5 @@ for n in ica_components:
 
 for res in results:
     print(f"\nResults for {res['n_components']} components:")
-    print(f"Train MSE: {res['train_mse']:.4f}, RMSE: {res['train_rmse']:.4f}, MAE: {res['train_mae']:.4f}, R²: {res['train_r2']:.4f}, Adjusted R²: {res['train_adj_r2']:.4f}")
-    print(f"Test  MSE: {res['test_mse']:.4f}, RMSE: {res['test_rmse']:.4f}, MAE: {res['test_mae']:.4f}, R²: {res['test_r2']:.4f}, Adjusted R²: {res['test_adj_r2']:.4f}")
+    print(f"Train MSE: {res['train_mse']}, RMSE: {res['train_rmse']}, MAE: {res['train_mae']}, R²: {res['train_r2']}, Adjusted R²: {res['train_adj_r2']}")
+    print(f"Test  MSE: {res['test_mse']}, RMSE: {res['test_rmse']}, MAE: {res['test_mae']}, R²: {res['test_r2']}, Adjusted R²: {res['test_adj_r2']}")
