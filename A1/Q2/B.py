@@ -2,10 +2,21 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
+# import os
+
+# loss_iterations_plots = 'Plots/'
+# os.makedirs(loss_iterations_plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
 df.fillna(df.mean(), inplace=True)
+# df.fillna(df.median(), inplace=True)
+
+numerical_cols = ['age', 'cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI', 'heartRate', 'glucose']
+# scaler = StandardScaler()
+# df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
+
 X = df.drop('HeartDisease', axis=1).values
 y = df['HeartDisease'].values
 
@@ -14,13 +25,14 @@ X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
 def sigmoid(z):
+    # z = np.clip(z, -500, -500)
     return 1 / (1 + np.exp(-z))
 
 def cross_entropy_loss(y, y_pred):
     return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
-def logistic_regression(X, y, X_val, y_val, lr=0.1, iterations=100):
-    weights = np.zeros(X.shape[1])
+def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=10000):
+    weights = np.random.rand(X.shape[1])
     bias = 0
     m = len(y)
     
@@ -43,6 +55,9 @@ def logistic_regression(X, y, X_val, y_val, lr=0.1, iterations=100):
         
         train_losses.append(train_loss)
         val_losses.append(val_loss)
+
+        if i % 1000 == 0:
+            print(f"Iteration {i+1}/{iterations}, Training Loss: {train_loss:.4f}, Validation Loss: {val_loss:.4f}")
         
     return train_losses, val_losses
 
@@ -75,5 +90,6 @@ plt.ylabel('Loss')
 plt.title('Loss vs. Iterations (Min-Max Scaling)')
 plt.legend()
 
+# plt.savefig(os.path.join(loss_iterations_plots, "loss_iterations_plots.png"))
 plt.tight_layout()
 plt.show()
