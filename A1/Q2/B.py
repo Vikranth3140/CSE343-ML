@@ -97,15 +97,12 @@ def logistic_regression(X, y, X_val, y_val, lr=0.0003, iterations=500):
         z = np.dot(X, weights) + bias
         y_pred = sigmoid(z)
         
-        # Compute gradients
         dw = (1/m) * np.dot(X.T, (y_pred - y))
         db = (1/m) * np.sum(y_pred - y)
         
-        # Update weights and bias
         weights -= lr * dw
         bias -= lr * db
         
-        # Calculate loss for training and validation sets
         train_loss = cross_entropy_loss(y, y_pred)
         val_pred = sigmoid(np.dot(X_val, weights) + bias)
         val_loss = cross_entropy_loss(y_val, val_pred)
@@ -114,16 +111,6 @@ def logistic_regression(X, y, X_val, y_val, lr=0.0003, iterations=500):
         val_losses.append(val_loss)
     
     return train_losses, val_losses
-
-# Min-Max Scaling function
-def min_max_scale(X_train, X_val):
-    X_min = X_train.min(axis=0)
-    X_max = X_train.max(axis=0)
-    
-    X_train_scaled = (X_train - X_min) / (X_max - X_min)
-    X_val_scaled = (X_val - X_min) / (X_max - X_min)
-    
-    return X_train_scaled, X_val_scaled
 
 def apply_scaling(scaling=True):
     if scaling:
