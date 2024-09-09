@@ -2,6 +2,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+import os
+
+loss_iterations_plots = 'Plots/'
+os.makedirs(loss_iterations_plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -24,7 +28,7 @@ def cross_entropy_loss(y, y_pred):
     return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
 # Logistic Regression using Batch Gradient Descent
-def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
+def logistic_regression(X, y, X_val, y_val, lr=0.00001, iterations=10000):
     weights = np.zeros(X.shape[1])
     bias = 0
     m = len(y)
@@ -35,7 +39,7 @@ def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
     for i in range(iterations):
         z = np.dot(X, weights) + bias
         y_pred = sigmoid(z)
-        
+
         dw = (1/m) * np.dot(X.T, (y_pred - y))
         db = (1/m) * np.sum(y_pred - y)
         
@@ -84,34 +88,6 @@ plt.legend()
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
 X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
 
-# Logistic Regression using Batch Gradient Descent
-def logistic_regression(X, y, X_val, y_val, lr=0.0003, iterations=500):
-    weights = np.random.rand(X.shape[1])
-    bias = 0
-    m = len(y)
-    
-    train_losses = []
-    val_losses = []
-    
-    for i in range(iterations):
-        z = np.dot(X, weights) + bias
-        y_pred = sigmoid(z)
-        
-        dw = (1/m) * np.dot(X.T, (y_pred - y))
-        db = (1/m) * np.sum(y_pred - y)
-        
-        weights -= lr * dw
-        bias -= lr * db
-        
-        train_loss = cross_entropy_loss(y, y_pred)
-        val_pred = sigmoid(np.dot(X_val, weights) + bias)
-        val_loss = cross_entropy_loss(y_val, val_pred)
-        
-        train_losses.append(train_loss)
-        val_losses.append(val_loss)
-    
-    return train_losses, val_losses
-
 def apply_scaling(scaling=True):
     if scaling:
         X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
@@ -136,4 +112,5 @@ plt.title('Loss vs. Iterations (No Scaling)')
 plt.legend()
 
 plt.tight_layout()
+plt.savefig(os.path.join(loss_iterations_plots, "loss_iterations_plots.png"))
 plt.show()
