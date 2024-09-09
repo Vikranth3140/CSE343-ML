@@ -2,21 +2,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-# from sklearn.preprocessing import StandardScaler
-# import os
-
-# loss_iterations_plots = 'Plots/'
-# os.makedirs(loss_iterations_plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
-# df.fillna(df.mean(), inplace=True)
+# Fill missing values with median
 df.fillna(df.median(), inplace=True)
 
 numerical_cols = ['age', 'cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI', 'heartRate', 'glucose']
-# scaler = StandardScaler()
-# df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
 
+# Prepare the feature matrix X and target vector y
 X = df.drop('HeartDisease', axis=1).values
 y = df['HeartDisease'].values
 
@@ -28,6 +22,7 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 def cross_entropy_loss(y, y_pred):
+    y_pred = np.clip(y_pred, 1e-7, 1 - 1e-7)  # Clipping to avoid log(0)
     return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
 def logistic_regression(X, y, X_val, y_val, lr=0.0003, iterations=500):
@@ -55,19 +50,30 @@ def logistic_regression(X, y, X_val, y_val, lr=0.0003, iterations=500):
         train_losses.append(train_loss)
         val_losses.append(val_loss)
         
+        # Print losses every 10 iterations
+        if i % 10 == 0:
+            print(f"Iteration {i}: Training Loss = {train_loss}, Validation Loss = {val_loss}")
+    
     return train_losses, val_losses
 
-def min_max_scale(X):
-    X_min = X.min(axis=0)
-    X_max = X.max(axis=0)
-    return (X - X_min) / (X_max - X_min)
+# Min-max scaling function using training min and max
+def min_max_scale(X_train, X_val):
+    X_min = X_train.min(axis=0)
+    X_max = X_train.max(axis=0)
+    
+    X_train_scaled = (X_train - X_min) / (X_max - X_min)
+    X_val_scaled = (X_val - X_min) / (X_max - X_min)  # Apply same scaling to validation set
+    
+    return X_train_scaled, X_val_scaled
 
-X_train_scaled = min_max_scale(X_train)
-X_val_scaled = min_max_scale(X_val)
+# Scale the features using Min-Max scaling based on the training set
+X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
 
+# Train the model without scaling and with Min-Max scaling
 train_losses_no_scaling, val_losses_no_scaling = logistic_regression(X_train, y_train, X_val, y_val)
 train_losses_minmax, val_losses_minmax = logistic_regression(X_train_scaled, y_train, X_val_scaled, y_val)
 
+# Plotting Loss vs Iterations
 plt.figure(figsize=(12, 5))
 
 plt.subplot(1, 2, 1)
@@ -86,25 +92,5 @@ plt.ylabel('Loss')
 plt.title('Loss vs. Iterations (Min-Max Scaling)')
 plt.legend()
 
-plt.xlim(1, 1000)
-
-plt.tight_layout()
-plt.show()
-plt.plot(train_losses_no_scaling, label='Training Loss (No Scaling)')
-plt.plot(val_losses_no_scaling, label='Validation Loss (No Scaling)')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('Loss vs. Iterations (No Scaling)')
-plt.legend()
-
-plt.subplot(1, 2, 2)
-plt.plot(train_losses_minmax, label='Training Loss (Min-Max Scaling)')
-plt.plot(val_losses_minmax, label='Validation Loss (Min-Max Scaling)')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('Loss vs. Iterations (Min-Max Scaling)')
-plt.legend()
-
-# plt.savefig(os.path.join(loss_iterations_plots, "loss_iterations_plots.png"))
 plt.tight_layout()
 plt.show()
