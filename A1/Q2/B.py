@@ -17,8 +17,8 @@ X = df.drop('HeartDisease', axis=1).values
 y = df['HeartDisease'].values
 
 # Split the dataset into 70:15:15 train, test, and validation splits
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -65,29 +65,6 @@ def min_max_scale(X_train, X_val):
     
     return X_train_scaled, X_val_scaled
 
-X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
-
-train_losses_minmax, val_losses_minmax = logistic_regression(X_train_scaled, y_train, X_val_scaled, y_val)
-
-# Plotting Loss vs Iterations
-plt.figure(figsize=(12, 5))
-
-# Min-Max Scaling Plot
-plt.subplot(1, 2, 2)
-plt.plot(train_losses_minmax, label='Training Loss (Min-Max Scaling)')
-plt.plot(val_losses_minmax, label='Validation Loss (Min-Max Scaling)')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('Loss vs. Iterations (Min-Max Scaling)')
-plt.legend()
-
-# plt.tight_layout()
-# plt.show()
-
-# Split the dataset into 70:15:15 train, test, and validation splits
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
-
 def apply_scaling(scaling=True):
     if scaling:
         X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
@@ -109,6 +86,14 @@ plt.plot(val_losses_no_scaling, label='Validation Loss (No Scaling)')
 plt.xlabel('Iterations')
 plt.ylabel('Loss')
 plt.title('Loss vs. Iterations (No Scaling)')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(train_losses_minmax, label='Training Loss (Min-Max Scaling)')
+plt.plot(val_losses_minmax, label='Validation Loss (Min-Max Scaling)')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.title('Loss vs. Iterations (Min-Max Scaling)')
 plt.legend()
 
 plt.tight_layout()
