@@ -10,6 +10,10 @@ df.columns = df.columns.str.strip()
 
 # Handling missing values
 
+null_values = df.isnull().sum()
+print("\nNumber of Null Values in Each Column:\n")
+print(f"{null_values}\n")
+
 # Filling numerical values with the median
 df.fillna(df.median(numeric_only=True), inplace=True)
 
