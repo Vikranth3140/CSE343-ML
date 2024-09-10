@@ -2,6 +2,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_auc_score
+import os
+import seaborn as sns
+
+confusion_matrix_plot = 'Plots/'
+os.makedirs(confusion_matrix_plot, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -12,9 +18,8 @@ numerical_cols = ['age', 'cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI', 'hear
 X = df.drop('HeartDisease', axis=1).values
 y = df['HeartDisease'].values
 
-# Split the dataset into 70:15:15 train, test, and validation splits
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
 
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
@@ -24,7 +29,7 @@ def cross_entropy_loss(y, y_pred):
     return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
 # Logistic Regression using Batch Gradient Descent
-def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
+def logistic_regression_extended(X, y, X_val, y_val, lr=0.00001, iterations=10000):
     weights = np.zeros(X.shape[1])
     bias = 0
     m = len(y)
@@ -35,7 +40,7 @@ def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
     for i in range(iterations):
         z = np.dot(X, weights) + bias
         y_pred = sigmoid(z)
-        
+
         dw = (1/m) * np.dot(X.T, (y_pred - y))
         db = (1/m) * np.sum(y_pred - y)
         
@@ -49,7 +54,7 @@ def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
         train_losses.append(train_loss)
         val_losses.append(val_loss)
     
-    return train_losses, val_losses
+    return weights, bias, train_losses, val_losses
 
 # Min-Max Scaling function
 def min_max_scale(X_train, X_val):
@@ -61,58 +66,6 @@ def min_max_scale(X_train, X_val):
     
     return X_train_scaled, X_val_scaled
 
-X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
-
-train_losses_minmax, val_losses_minmax = logistic_regression(X_train_scaled, y_train, X_val_scaled, y_val)
-
-# Plotting Loss vs Iterations
-plt.figure(figsize=(12, 5))
-
-# Min-Max Scaling Plot
-plt.subplot(1, 2, 2)
-plt.plot(train_losses_minmax, label='Training Loss (Min-Max Scaling)')
-plt.plot(val_losses_minmax, label='Validation Loss (Min-Max Scaling)')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('Loss vs. Iterations (Min-Max Scaling)')
-plt.legend()
-
-# plt.tight_layout()
-# plt.show()
-
-# Split the dataset into 70:15:15 train, test, and validation splits
-X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
-X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42, stratify=y_temp)
-
-# Logistic Regression using Batch Gradient Descent
-def logistic_regression(X, y, X_val, y_val, lr=0.01, iterations=1000):
-    weights = np.zeros(X.shape[1])
-    bias = 0
-    m = len(y)
-    
-    train_losses = []
-    val_losses = []
-    
-    for i in range(iterations):
-        z = np.dot(X, weights) + bias
-        y_pred = sigmoid(z)
-        
-        dw = (1/m) * np.dot(X.T, (y_pred - y))
-        db = (1/m) * np.sum(y_pred - y)
-        
-        weights -= lr * dw
-        bias -= lr * db
-        
-        train_loss = cross_entropy_loss(y, y_pred)
-        val_pred = sigmoid(np.dot(X_val, weights) + bias)
-        val_loss = cross_entropy_loss(y_val, val_pred)
-        
-        train_losses.append(train_loss)
-        val_losses.append(val_loss)
-    
-    return train_losses, val_losses, weights, bias
-
-
 def apply_scaling(scaling=True):
     if scaling:
         X_train_scaled, X_val_scaled = min_max_scale(X_train, X_val)
@@ -120,59 +73,35 @@ def apply_scaling(scaling=True):
     else:
         return X_train, X_val
 
+def predict(X, weights, bias):
+    z = np.dot(X, weights) + bias
+    return sigmoid(z)
+
 X_train_scaled, X_val_scaled = apply_scaling(scaling=True)
-train_losses_minmax, val_losses_minmax, weights, bias = logistic_regression(X_train_scaled, y_train, X_val_scaled, y_val)
-
+weights_minmax, bias_minmax, train_losses_minmax, val_losses_minmax = logistic_regression_extended(X_train_scaled, y_train, X_val_scaled, y_val)
 X_train_unscaled, X_val_unscaled = apply_scaling(scaling=False)
-train_losses_no_scaling, val_losses_no_scaling = logistic_regression(X_train_unscaled, y_train, X_val_unscaled, y_val)
+weights_no_scale, bias_no_scale, train_losses_no_scaling, val_losses_no_scaling = logistic_regression_extended(X_train_unscaled, y_train, X_val_unscaled, y_val)
 
-plt.figure(figsize=(12, 5))
+y_val_pred_probs = predict(X_val_scaled, weights_minmax, bias_minmax)
+y_val_pred = (y_val_pred_probs >= 0.5).astype(int)
 
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_no_scaling, label='Training Loss (No Scaling)')
-plt.plot(val_losses_no_scaling, label='Validation Loss (No Scaling)')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('Loss vs. Iterations (No Scaling)')
-plt.legend()
-
-plt.tight_layout()
-plt.show()
-
-
-from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_auc_score, roc_curve
-import seaborn as sns
-
-# Predict on the validation set using the updated weights and bias
-y_val_pred_prob = sigmoid(np.dot(X_val_scaled, weights) + bias)  # For scaled validation set
-y_val_pred = (y_val_pred_prob > 0.5).astype(int)
-
-# Confusion Matrix
 conf_matrix = confusion_matrix(y_val, y_val_pred)
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues')
-plt.title('Confusion Matrix')
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.show()
 
-# Precision, Recall, F1-Score, and ROC-AUC
 precision = precision_score(y_val, y_val_pred)
 recall = recall_score(y_val, y_val_pred)
 f1 = f1_score(y_val, y_val_pred)
-roc_auc = roc_auc_score(y_val, y_val_pred_prob)
+roc_auc = roc_auc_score(y_val, y_val_pred_probs)
 
-# Print metrics
-print(f'Precision: {precision:.4f}')
-print(f'Recall: {recall:.4f}')
-print(f'F1 Score: {f1:.4f}')
-print(f'ROC-AUC Score: {roc_auc:.4f}')
+print("Confusion Matrix:\n", conf_matrix)
+print(f"Precision: {precision:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1 Score: {f1:.4f}")
+print(f"ROC-AUC Score: {roc_auc:.4f}")
 
-# ROC Curve Plot
-fpr, tpr, thresholds = roc_curve(y_val, y_val_pred_prob)
-plt.plot(fpr, tpr, label=f'ROC Curve (area = {roc_auc:.4f})')
-plt.plot([0, 1], [0, 1], 'k--')
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('ROC Curve')
-plt.legend(loc='lower right')
+plt.figure(figsize=(6, 4))
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
 plt.show()
