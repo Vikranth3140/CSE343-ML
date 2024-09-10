@@ -11,7 +11,8 @@ os.makedirs(confusion_matrix_plot, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
-df.fillna(df.median(), inplace=True)
+# df.fillna(df.median(), inplace=True)
+df.fillna(df.mean(), inplace=True)
 
 numerical_cols = ['age', 'cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI', 'heartRate', 'glucose']
 
@@ -30,7 +31,8 @@ def cross_entropy_loss(y, y_pred):
 
 # Logistic Regression using Batch Gradient Descent
 def logistic_regression_extended(X, y, X_val, y_val, lr=0.00001, iterations=10000):
-    weights = np.zeros(X.shape[1])
+    # weights = np.zeros(X.shape[1])
+    weights = np.random.rand(X.shape[1])
     bias = 0
     m = len(y)
     
@@ -93,10 +95,10 @@ f1 = f1_score(y_val, y_val_pred)
 roc_auc = roc_auc_score(y_val, y_val_pred_probs)
 
 print("Confusion Matrix:\n", conf_matrix)
-print(f"Precision: {precision:.4f}")
-print(f"Recall: {recall:.4f}")
-print(f"F1 Score: {f1:.4f}")
-print(f"ROC-AUC Score: {roc_auc:.4f}")
+print(f"Precision: {precision}")
+print(f"Recall: {recall}")
+print(f"F1 Score: {f1}")
+print(f"ROC-AUC Score: {roc_auc}")
 
 plt.figure(figsize=(6, 4))
 sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
