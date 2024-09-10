@@ -6,8 +6,8 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 import os
 import seaborn as sns
 
-confusion_matrix_plot = 'Plots/'
-os.makedirs(confusion_matrix_plot, exist_ok=True)
+confusion_matrices_plot = 'Plots/'
+os.makedirs(confusion_matrices_plot, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -128,17 +128,18 @@ val_accuracy_unscaled = (y_val == (predict(X_val_unscaled, weights_no_scale, bia
 print(f"Training Accuracy (Unscaled): {train_accuracy_unscaled}")
 print(f"Validation Accuracy (Unscaled): {val_accuracy_unscaled}")
 
-plt.figure(figsize=(6, 4))
-sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
-plt.title("Confusion Matrix (Scaled Data)")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-plt.show()
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
-plt.figure(figsize=(6, 4))
-sns.heatmap(conf_matrix_unscaled, annot=True, fmt="d", cmap="Reds", cbar=False)
-plt.title("Confusion Matrix (Unscaled Data)")
-plt.xlabel("Predicted")
-plt.ylabel("Actual")
-plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False, ax=axes[0])
+axes[0].set_title("Confusion Matrix (Scaled Data)")
+axes[0].set_xlabel("Predicted")
+axes[0].set_ylabel("Actual")
+
+sns.heatmap(conf_matrix_unscaled, annot=True, fmt="d", cmap="Reds", cbar=False, ax=axes[1])
+axes[1].set_title("Confusion Matrix (Unscaled Data)")
+axes[1].set_xlabel("Predicted")
+axes[1].set_ylabel("Actual")
+
+plt.savefig(os.path.join(confusion_matrices_plot, "confusion_matrices_plot.png"))
+plt.tight_layout()
 plt.show()
