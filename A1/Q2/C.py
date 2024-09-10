@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_auc_score
-import os
+# import os
 import seaborn as sns
 
-confusion_matrix_plot = 'Plots/'
-os.makedirs(confusion_matrix_plot, exist_ok=True)
+# confusion_matrix_plot = 'Plots/'
+# os.makedirs(confusion_matrix_plot, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -94,16 +94,24 @@ recall = recall_score(y_val, y_val_pred)
 f1 = f1_score(y_val, y_val_pred)
 roc_auc = roc_auc_score(y_val, y_val_pred_probs)
 
+train_accuracy = (y_train == (predict(X_train_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
+val_accuracy = (y_val == (predict(X_val_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
+# test_accuracy = (y_test == (predict(X_test_scaled, weights_minmax, bias_minmax) >= 0.5).astype(int)).mean()
+
 print("Confusion Matrix:\n", conf_matrix)
 print(f"Precision: {precision}")
 print(f"Recall: {recall}")
 print(f"F1 Score: {f1}")
 print(f"ROC-AUC Score: {roc_auc}")
 
+print(f"Training Accuracy: {train_accuracy}")
+print(f"Validation Accuracy: {val_accuracy}")
+# print(f"Testing Accuracy: {test_accuracy}")
+
 plt.figure(figsize=(6, 4))
 sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
 plt.title("Confusion Matrix")
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
+# plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
 plt.show()
