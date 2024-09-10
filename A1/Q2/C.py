@@ -3,11 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_auc_score
-# import os
+import os
 import seaborn as sns
 
-# confusion_matrix_plot = 'Plots/'
-# os.makedirs(confusion_matrix_plot, exist_ok=True)
+confusion_matrix_plot = 'Plots/'
+os.makedirs(confusion_matrix_plot, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -94,24 +94,51 @@ recall = recall_score(y_val, y_val_pred)
 f1 = f1_score(y_val, y_val_pred)
 roc_auc = roc_auc_score(y_val, y_val_pred_probs)
 
-train_accuracy = (y_train == (predict(X_train_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
-val_accuracy = (y_val == (predict(X_val_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
-# test_accuracy = (y_test == (predict(X_test_scaled, weights_minmax, bias_minmax) >= 0.5).astype(int)).mean()
-
+print("Results for Min-Max Scaled Data:")
 print("Confusion Matrix:\n", conf_matrix)
 print(f"Precision: {precision}")
 print(f"Recall: {recall}")
 print(f"F1 Score: {f1}")
 print(f"ROC-AUC Score: {roc_auc}")
 
-print(f"Training Accuracy: {train_accuracy}")
-print(f"Validation Accuracy: {val_accuracy}")
-# print(f"Testing Accuracy: {test_accuracy}")
+train_accuracy_scaled = (y_train == (predict(X_train_scaled, weights_minmax, bias_minmax) >= 0.5).astype(int)).mean()
+val_accuracy_scaled = (y_val == (predict(X_val_scaled, weights_minmax, bias_minmax) >= 0.5).astype(int)).mean()
+print(f"Training Accuracy (Scaled): {train_accuracy_scaled}")
+print(f"Validation Accuracy (Scaled): {val_accuracy_scaled}")
+print("\n")
+
+y_val_pred_probs_unscaled = predict(X_val_unscaled, weights_no_scale, bias_no_scale)
+y_val_pred_unscaled = (y_val_pred_probs_unscaled >= 0.5).astype(int)
+
+conf_matrix_unscaled = confusion_matrix(y_val, y_val_pred_unscaled)
+precision_unscaled = precision_score(y_val, y_val_pred_unscaled)
+recall_unscaled = recall_score(y_val, y_val_pred_unscaled)
+f1_unscaled = f1_score(y_val, y_val_pred_unscaled)
+roc_auc_unscaled = roc_auc_score(y_val, y_val_pred_probs_unscaled)
+
+print("Results for Unscaled Data:")
+print("Confusion Matrix (Unscaled):\n", conf_matrix_unscaled)
+print(f"Precision (Unscaled): {precision_unscaled}")
+print(f"Recall (Unscaled): {recall_unscaled}")
+print(f"F1 Score (Unscaled): {f1_unscaled}")
+print(f"ROC-AUC Score (Unscaled): {roc_auc_unscaled}")
+
+train_accuracy_unscaled = (y_train == (predict(X_train_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
+val_accuracy_unscaled = (y_val == (predict(X_val_unscaled, weights_no_scale, bias_no_scale) >= 0.5).astype(int)).mean()
+print(f"Training Accuracy (Unscaled): {train_accuracy_unscaled}")
+print(f"Validation Accuracy (Unscaled): {val_accuracy_unscaled}")
 
 plt.figure(figsize=(6, 4))
 sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="Blues", cbar=False)
-plt.title("Confusion Matrix")
+plt.title("Confusion Matrix (Scaled Data)")
 plt.xlabel("Predicted")
 plt.ylabel("Actual")
-# plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
+plt.show()
+
+plt.figure(figsize=(6, 4))
+sns.heatmap(conf_matrix_unscaled, annot=True, fmt="d", cmap="Reds", cbar=False)
+plt.title("Confusion Matrix (Unscaled Data)")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.savefig(os.path.join(confusion_matrix_plot, "confusion_matrix_plot.png"))
 plt.show()
