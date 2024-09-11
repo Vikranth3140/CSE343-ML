@@ -35,7 +35,7 @@ def calculate_accuracy(X, y, weights, bias):
     return accuracy_score(y, y_pred_class)
 
 # Stochastic Gradient Descent (SGD)
-def stochastic_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=1000):
+def stochastic_gradient_descent(X, y, X_val, y_val, lr=0.00001, iterations=10000):
     weights = np.random.rand(X.shape[1])
     bias = 0
     train_losses = []
@@ -78,7 +78,7 @@ def stochastic_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=1000):
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
 # Mini-Batch Gradient Descent (MBGD)
-def mini_batch_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=1000, batch_size=32):
+def mini_batch_gradient_descent(X, y, X_val, y_val, lr=0.00001, iterations=10000, batch_size=32):
     weights = np.random.rand(X.shape[1])
     bias = 0
     train_losses = []
@@ -128,10 +128,10 @@ def mini_batch_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=1000, ba
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
 # Run SGD and MBGD with varying batch sizes
-iterations = 1000
-weights_sgd, bias_sgd, train_losses_sgd, val_losses_sgd, train_acc_sgd, val_acc_sgd = stochastic_gradient_descent(X_train, y_train, X_val, y_val, lr=0.01, iterations=iterations)
-weights_mbgd_32, bias_mbgd_32, train_losses_mbgd_32, val_losses_mbgd_32, train_acc_mbgd_32, val_acc_mbgd_32 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.01, iterations=iterations, batch_size=32)
-weights_mbgd_64, bias_mbgd_64, train_losses_mbgd_64, val_losses_mbgd_64, train_acc_mbgd_64, val_acc_mbgd_64 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.01, iterations=iterations, batch_size=64)
+iterations = 10000
+weights_sgd, bias_sgd, train_losses_sgd, val_losses_sgd, train_acc_sgd, val_acc_sgd = stochastic_gradient_descent(X_train, y_train, X_val, y_val, lr=0.00001, iterations=iterations)
+weights_mbgd_32, bias_mbgd_32, train_losses_mbgd_32, val_losses_mbgd_32, train_acc_mbgd_32, val_acc_mbgd_32 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.00001, iterations=iterations, batch_size=32)
+weights_mbgd_64, bias_mbgd_64, train_losses_mbgd_64, val_losses_mbgd_64, train_acc_mbgd_64, val_acc_mbgd_64 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.00001, iterations=iterations, batch_size=64)
 
 # Plot loss vs. iteration for each method
 plt.figure(figsize=(14, 6))
