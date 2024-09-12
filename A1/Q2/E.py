@@ -127,8 +127,8 @@ for i in range(k):
     X_train_fold = np.concatenate((X[:i * fold_size], X[(i + 1) * fold_size:]), axis=0)
     y_train_fold = np.concatenate((y[:i * fold_size], y[(i + 1) * fold_size:]), axis=0)
 
-    # weights, bias, a, b, c, d = mini_batch_gradient_descent(X_train_fold, y_train_fold, X_val_fold, y_val_fold, lr=0.0001, iterations=100, batch_size=32)
-    weights, bias, a, b, c, d = stochastic_gradient_descent(X_train_fold, y_train_fold, X_val_fold, y_val_fold, lr=0.0001, iterations=100)
+    weights, bias, a, b, c, d = mini_batch_gradient_descent(X_train_fold, y_train_fold, X_val_fold, y_val_fold, lr=0.0001, iterations=100, batch_size=8)
+    # weights, bias, a, b, c, d = stochastic_gradient_descent(X_train_fold, y_train_fold, X_val_fold, y_val_fold, lr=0.0001, iterations=100)
 
     y_val_pred_probs = sigmoid(np.dot(X_val_fold, weights) + bias)
     y_val_pred = (y_val_pred_probs >= 0.5).astype(int)

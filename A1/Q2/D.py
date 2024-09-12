@@ -116,6 +116,7 @@ def mini_batch_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=500, bat
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
 weights_sgd, bias_sgd, train_losses_sgd, val_losses_sgd, train_acc_sgd, val_acc_sgd = stochastic_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100)
+weights_mbgd_32, bias_mbgd_32, train_losses_mbgd_8, val_losses_mbgd_8, train_acc_mbgd_8, val_acc_mbgd_8 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=8)
 weights_mbgd_32, bias_mbgd_32, train_losses_mbgd_32, val_losses_mbgd_32, train_acc_mbgd_32, val_acc_mbgd_32 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=32)
 weights_mbgd_64, bias_mbgd_64, train_losses_mbgd_64, val_losses_mbgd_64, train_acc_mbgd_64, val_acc_mbgd_64 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=64)
 weights_mbgd_256, bias_mbgd_256, train_losses_mbgd_256, val_losses_mbgd_256, train_acc_mbgd_256, val_acc_mbgd_256 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=256)
@@ -147,6 +148,9 @@ def plot_figure(train_metric, val_metric, metric_name, batch_size_label, filenam
 
 plot_figure(train_losses_sgd, val_losses_sgd, 'Loss', 'SGD', 'sgd_loss.png')
 plot_figure(train_acc_sgd, val_acc_sgd, 'Accuracy', 'SGD', 'sgd_accuracy.png')
+
+plot_figure(train_losses_mbgd_8, val_losses_mbgd_8, 'Loss', 'MBGD (Batch Size 8)', 'mbgd_8_loss.png')
+plot_figure(train_acc_mbgd_8, val_acc_mbgd_8, 'Accuracy', 'MBGD (Batch Size 8)', 'mbgd_8_accuracy.png')
 
 plot_figure(train_losses_mbgd_32, val_losses_mbgd_32, 'Loss', 'MBGD (Batch Size 32)', 'mbgd_32_loss.png')
 plot_figure(train_acc_mbgd_32, val_acc_mbgd_32, 'Accuracy', 'MBGD (Batch Size 32)', 'mbgd_32_accuracy.png')
