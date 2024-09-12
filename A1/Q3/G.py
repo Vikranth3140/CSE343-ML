@@ -67,7 +67,7 @@ def perform_elastic_net(alpha, X_train, X_test, y_train, y_test):
     }
 
 # Try ElasticNet with different alpha values
-alpha_values = [0.1, 0.05, 0.001, 0.005, 0.0005]
+alpha_values = [0.1, 0.05, 0.01, 0.005, 0.001]
 results = []
 
 for alpha in alpha_values:
