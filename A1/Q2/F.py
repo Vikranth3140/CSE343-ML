@@ -7,7 +7,8 @@ import os
 from tqdm import tqdm
 
 plots = 'Plots/'
-os.makedirs(plots, exist_ok=True)
+experiments_dir = os.path.join(plots, 'Experiments/')
+os.makedirs(experiments_dir, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -93,7 +94,7 @@ def mini_batch_gradient_descent_early_stopping(X, y, X_val, y_val, lr=0.01, iter
         val_accuracy = calculate_accuracy(X_val, y_val, weights, bias)
         train_accuracies.append(train_accuracy)
         val_accuracies.append(val_accuracy)
-        
+
         if early_stopping:
             best_loss, patience_counter, stop = check_early_stopping(val_loss, best_loss, patience_counter, patience)
             if stop:
@@ -124,13 +125,31 @@ def plot_figure(train_metric, val_metric, metric_name, label, filename):
     plt.grid(True)
     plt.legend()
 
-    plt.savefig(os.path.join(plots, filename))
+    plt.savefig(os.path.join(experiments_dir, filename))
 
-    plt.tight_layout()
-    plt.show()
+def run_value(lr, l1_ratio, l2_ratio, early_stopping):
+    weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(
+        X_train, y_train, X_val, y_val, lr=lr, iterations=500, batch_size=32, l1_ratio=l1_ratio, l2_ratio=l2_ratio, early_stopping=early_stopping, patience=20)
+    
+    return train_losses_es, val_losses_es, train_acc_es, val_acc_es
 
-plot_figure(train_losses_no_es, val_losses_no_es, 'Loss', 'No Early Stopping', 'loss_no_early_stopping.png')
-plot_figure(train_acc_no_es, val_acc_no_es, 'Accuracy', 'No Early Stopping', 'accuracy_no_early_stopping.png')
+learning_rates = [0.001, 0.01, 0.1]
+l1_ratios = [0.0, 0.1, 0.5]
+l2_ratios = [0.0, 0.1, 0.5]
 
-plot_figure(train_losses_es, val_losses_es, 'Loss', 'Early Stopping', 'loss_early_stopping.png')
-plot_figure(train_acc_es, val_acc_es, 'Accuracy', 'Early Stopping', 'accuracy_early_stopping.png')
+results = []
+
+for lr in learning_rates:
+    for l1 in l1_ratios:
+        for l2 in l2_ratios:
+            print(f"\nRunning experiment with LR={lr}, L1={l1}, L2={l2}, Early Stopping=True")
+            train_losses_es, val_losses_es, train_acc_es, val_acc_es = run_value(lr, l1, l2, early_stopping=True)
+            results.append((lr, l1, l2, train_losses_es, val_losses_es, train_acc_es, val_acc_es))
+
+def plot_results(results):
+    for lr, l1, l2, train_losses, val_losses, train_acc, val_acc in results:
+        label = f"LR={lr}, L1={l1}, L2={l2}"
+        plot_figure(train_losses, val_losses, 'Loss', label, f'loss_{lr}_{l1}_{l2}.png')
+        plot_figure(train_acc, val_acc, 'Accuracy', label, f'accuracy_{lr}_{l1}_{l2}.png')
+
+plot_results(results)
