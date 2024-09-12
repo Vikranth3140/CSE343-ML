@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 plots = 'Plots/'
 experiments_dir = os.path.join(plots, 'Experiments/')
+os.makedirs(plots, exist_ok=True)
 os.makedirs(experiments_dir, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
@@ -103,10 +104,10 @@ def mini_batch_gradient_descent_early_stopping(X, y, X_val, y_val, lr=0.01, iter
     
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
-weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=20)
-weights_no_es, bias_no_es, train_losses_no_es, val_losses_no_es, train_acc_no_es, val_acc_no_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=False)
+# weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=20)
+# weights_no_es, bias_no_es, train_losses_no_es, val_losses_no_es, train_acc_no_es, val_acc_no_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=False)
 
-def plot_figure(train_metric, val_metric, metric_name, label, filename):
+def plot_figure(train_metric, val_metric, metric_name, label, filename, save_dir):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(1, 2, 1)
@@ -125,31 +126,32 @@ def plot_figure(train_metric, val_metric, metric_name, label, filename):
     plt.grid(True)
     plt.legend()
 
-    plt.savefig(os.path.join(experiments_dir, filename))
+    plt.savefig(os.path.join(save_dir, filename))
 
-def run_value(lr, l1_ratio, l2_ratio, early_stopping):
-    weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(
-        X_train, y_train, X_val, y_val, lr=lr, iterations=500, batch_size=32, l1_ratio=l1_ratio, l2_ratio=l2_ratio, early_stopping=early_stopping, patience=20)
-    
-    return train_losses_es, val_losses_es, train_acc_es, val_acc_es
+weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(
+    X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=20)
 
-learning_rates = [0.001, 0.01, 0.1]
-l1_ratios = [0.0, 0.1, 0.5]
-l2_ratios = [0.0, 0.1, 0.5]
+weights_no_es, bias_no_es, train_losses_no_es, val_losses_no_es, train_acc_no_es, val_acc_no_es = mini_batch_gradient_descent_early_stopping(
+    X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=False)
+
+plot_figure(train_losses_es, val_losses_es, 'Loss', 'Early Stopping', 'loss_early_stopping.png', plots)
+plot_figure(train_acc_es, val_acc_es, 'Accuracy', 'Early Stopping', 'accuracy_early_stopping.png', plots)
+
+plot_figure(train_losses_no_es, val_losses_no_es, 'Loss', 'No Early Stopping', 'loss_no_early_stopping.png', plots)
+plot_figure(train_acc_no_es, val_acc_no_es, 'Accuracy', 'No Early Stopping', 'accuracy_no_early_stopping.png', plots)
+
+learning_rates = [0.0001, 0.001]
+l1_ratios = [0.0, 0.1]
+l2_ratios = [0.0, 0.1]
 
 results = []
 
 for lr in learning_rates:
     for l1 in l1_ratios:
         for l2 in l2_ratios:
-            print(f"\nRunning experiment with LR={lr}, L1={l1}, L2={l2}, Early Stopping=True")
-            train_losses_es, val_losses_es, train_acc_es, val_acc_es = run_value(lr, l1, l2, early_stopping=True)
-            results.append((lr, l1, l2, train_losses_es, val_losses_es, train_acc_es, val_acc_es))
-
-def plot_results(results):
-    for lr, l1, l2, train_losses, val_losses, train_acc, val_acc in results:
-        label = f"LR={lr}, L1={l1}, L2={l2}"
-        plot_figure(train_losses, val_losses, 'Loss', label, f'loss_{lr}_{l1}_{l2}.png')
-        plot_figure(train_acc, val_acc, 'Accuracy', label, f'accuracy_{lr}_{l1}_{l2}.png')
-
-plot_results(results)
+            weights, bias, train_losses, val_losses, train_acc, val_acc = mini_batch_gradient_descent_early_stopping(
+                X_train, y_train, X_val, y_val, lr=lr, iterations=500, batch_size=32, l1_ratio=l1, l2_ratio=l2, early_stopping=True, patience=20)
+            
+            label = f'LR={lr}, L1={l1}, L2={l2}'
+            plot_figure(train_losses, val_losses, 'Loss', label, f'loss_{lr}_{l1}_{l2}.png', experiments_dir)
+            plot_figure(train_acc, val_acc, 'Accuracy', label, f'accuracy_{lr}_{l1}_{l2}.png', experiments_dir)
