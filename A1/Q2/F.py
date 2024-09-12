@@ -39,25 +39,17 @@ def regularized_loss(y, y_pred, weights, l1_ratio=0.0, l2_ratio=0.0):
     l2_penalty = l2_ratio * np.sum(np.square(weights))
     return cross_entropy + l1_penalty + l2_penalty
 
-# Early Stopping mechanism
-class EarlyStopping:
-    def __init__(self, patience=10, delta=0):
-        self.patience = patience
-        self.delta = delta
-        self.best_loss = None
-        self.counter = 0
-        self.early_stop = False
+# Early Stopping
+def check_early_stopping(val_loss, best_loss, patience_counter, patience, delta=0):
+    if best_loss is None or val_loss < best_loss - delta:
+        return val_loss, 0, False
+    else:
+        patience_counter += 1
+        if patience_counter >= patience:
+            return best_loss, patience_counter, True
+        return best_loss, patience_counter, False
 
-    def __call__(self, val_loss):
-        if self.best_loss is None or val_loss < self.best_loss - self.delta:
-            self.best_loss = val_loss
-            self.counter = 0
-        else:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True
-
-# Mini-Batch Gradient Descent with L1 and L2 Regularization
+# Mini-Batch Gradient Descent with L1 and L2 Regularization with Early Stopping
 def mini_batch_gradient_descent_early_stopping(X, y, X_val, y_val, lr=0.01, iterations=500, batch_size=32, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=10):
     weights = np.random.rand(X.shape[1])
     bias = 0
@@ -68,7 +60,8 @@ def mini_batch_gradient_descent_early_stopping(X, y, X_val, y_val, lr=0.01, iter
     
     m = len(y)
     num_batches = m // batch_size
-    es = EarlyStopping(patience=patience) if early_stopping else None
+    best_loss = None
+    patience_counter = 0
     
     for i in tqdm(range(iterations), desc=f"MBGD (Batch Size {batch_size}) Iterations"):
         indices = np.arange(m)
@@ -100,20 +93,17 @@ def mini_batch_gradient_descent_early_stopping(X, y, X_val, y_val, lr=0.01, iter
         val_accuracy = calculate_accuracy(X_val, y_val, weights, bias)
         train_accuracies.append(train_accuracy)
         val_accuracies.append(val_accuracy)
-
+        
         if early_stopping:
-            es(val_loss)
-            if es.early_stop:
+            best_loss, patience_counter, stop = check_early_stopping(val_loss, best_loss, patience_counter, patience)
+            if stop:
                 print("Early stopping triggered.")
                 break
     
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
-weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(
-    X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=8, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=20)
-
-weights_no_es, bias_no_es, train_losses_no_es, val_losses_no_es, train_acc_no_es, val_acc_no_es = mini_batch_gradient_descent_early_stopping(
-    X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=8, l1_ratio=0.0, l2_ratio=0.0, early_stopping=False)
+weights_es, bias_es, train_losses_es, val_losses_es, train_acc_es, val_acc_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=True, patience=20)
+weights_no_es, bias_no_es, train_losses_no_es, val_losses_no_es, train_acc_no_es, val_acc_no_es = mini_batch_gradient_descent_early_stopping(X_train, y_train, X_val, y_val, lr=0.0001, iterations=500, batch_size=256, l1_ratio=0.0, l2_ratio=0.0, early_stopping=False)
 
 def plot_figure(train_metric, val_metric, metric_name, label, filename):
     plt.figure(figsize=(12, 6))
