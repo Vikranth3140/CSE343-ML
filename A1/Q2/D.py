@@ -3,8 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-# import os
+import os
 from tqdm import tqdm
+
+plots = 'Plots/'
+os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -112,116 +115,47 @@ def mini_batch_gradient_descent(X, y, X_val, y_val, lr=0.01, iterations=500, bat
     
     return weights, bias, train_losses, val_losses, train_accuracies, val_accuracies
 
-# Updated code to generate separate plots for each batch size
-
-# Run SGD and MBGD with batch sizes 32, 64, 256, and 512
 weights_sgd, bias_sgd, train_losses_sgd, val_losses_sgd, train_acc_sgd, val_acc_sgd = stochastic_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100)
 weights_mbgd_32, bias_mbgd_32, train_losses_mbgd_32, val_losses_mbgd_32, train_acc_mbgd_32, val_acc_mbgd_32 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=32)
 weights_mbgd_64, bias_mbgd_64, train_losses_mbgd_64, val_losses_mbgd_64, train_acc_mbgd_64, val_acc_mbgd_64 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=64)
 weights_mbgd_256, bias_mbgd_256, train_losses_mbgd_256, val_losses_mbgd_256, train_acc_mbgd_256, val_acc_mbgd_256 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=256)
 weights_mbgd_512, bias_mbgd_512, train_losses_mbgd_512, val_losses_mbgd_512, train_acc_mbgd_512, val_acc_mbgd_512 = mini_batch_gradient_descent(X_train, y_train, X_val, y_val, lr=0.0001, iterations=100, batch_size=512)
 
-# Plot for SGD
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_sgd, label='SGD Training Loss', color='green')
-plt.plot(val_losses_sgd, label='SGD Validation Loss', linestyle='--', color='green')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('SGD: Loss vs. Iterations')
-plt.legend()
+def plot_figure(train_metric, val_metric, metric_name, batch_size_label, filename):
+    plt.figure(figsize=(12, 6))
 
-plt.subplot(1, 2, 2)
-plt.plot(train_acc_sgd, label='SGD Training Accuracy', color='green')
-plt.plot(val_acc_sgd, label='SGD Validation Accuracy', linestyle='--', color='green')
-plt.xlabel('Iterations')
-plt.ylabel('Accuracy')
-plt.title('SGD: Accuracy vs. Iterations')
-plt.legend()
+    plt.subplot(1, 2, 1)
+    plt.plot(train_metric, label=f'Training {metric_name}', color='blue')
+    plt.xlabel('Iterations')
+    plt.ylabel(metric_name)
+    plt.title(f'Training {metric_name} vs. Iterations ({batch_size_label})')
+    plt.grid(True)
+    plt.legend()
 
-plt.tight_layout()
-plt.show()
+    plt.subplot(1, 2, 2)
+    plt.plot(val_metric, label=f'Validation {metric_name}', color='red')
+    plt.xlabel('Iterations')
+    plt.ylabel(metric_name)
+    plt.title(f'Validation {metric_name} vs. Iterations ({batch_size_label})')
+    plt.grid(True)
+    plt.legend()
 
-# Plot for MBGD with Batch Size 32
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_mbgd_32, label='MBGD (Batch Size 32) Training Loss', color='blue')
-plt.plot(val_losses_mbgd_32, label='MBGD (Batch Size 32) Validation Loss', linestyle='--', color='blue')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('MBGD (Batch Size 32): Loss vs. Iterations')
-plt.legend()
+    plt.savefig(os.path.join(plots, filename))
 
-plt.subplot(1, 2, 2)
-plt.plot(train_acc_mbgd_32, label='MBGD (Batch Size 32) Training Accuracy', color='blue')
-plt.plot(val_acc_mbgd_32, label='MBGD (Batch Size 32) Validation Accuracy', linestyle='--', color='blue')
-plt.xlabel('Iterations')
-plt.ylabel('Accuracy')
-plt.title('MBGD (Batch Size 32): Accuracy vs. Iterations')
-plt.legend()
+    plt.tight_layout()
+    plt.show()
 
-plt.tight_layout()
-plt.show()
+plot_figure(train_losses_sgd, val_losses_sgd, 'Loss', 'SGD', 'sgd_loss.png')
+plot_figure(train_acc_sgd, val_acc_sgd, 'Accuracy', 'SGD', 'sgd_accuracy.png')
 
-# Plot for MBGD with Batch Size 64
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_mbgd_64, label='MBGD (Batch Size 64) Training Loss', color='orange')
-plt.plot(val_losses_mbgd_64, label='MBGD (Batch Size 64) Validation Loss', linestyle='--', color='orange')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('MBGD (Batch Size 64): Loss vs. Iterations')
-plt.legend()
+plot_figure(train_losses_mbgd_32, val_losses_mbgd_32, 'Loss', 'MBGD (Batch Size 32)', 'mbgd_32_loss.png')
+plot_figure(train_acc_mbgd_32, val_acc_mbgd_32, 'Accuracy', 'MBGD (Batch Size 32)', 'mbgd_32_accuracy.png')
 
-plt.subplot(1, 2, 2)
-plt.plot(train_acc_mbgd_64, label='MBGD (Batch Size 64) Training Accuracy', color='orange')
-plt.plot(val_acc_mbgd_64, label='MBGD (Batch Size 64) Validation Accuracy', linestyle='--', color='orange')
-plt.xlabel('Iterations')
-plt.ylabel('Accuracy')
-plt.title('MBGD (Batch Size 64): Accuracy vs. Iterations')
-plt.legend()
+plot_figure(train_losses_mbgd_64, val_losses_mbgd_64, 'Loss', 'MBGD (Batch Size 64)', 'mbgd_64_loss.png')
+plot_figure(train_acc_mbgd_64, val_acc_mbgd_64, 'Accuracy', 'MBGD (Batch Size 64)', 'mbgd_64_accuracy.png')
 
-plt.tight_layout()
-plt.show()
+plot_figure(train_losses_mbgd_256, val_losses_mbgd_256, 'Loss', 'MBGD (Batch Size 256)', 'mbgd_256_loss.png')
+plot_figure(train_acc_mbgd_256, val_acc_mbgd_256, 'Accuracy', 'MBGD (Batch Size 256)', 'mbgd_256_accuracy.png')
 
-# Plot for MBGD with Batch Size 256
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_mbgd_256, label='MBGD (Batch Size 256) Training Loss', color='red')
-plt.plot(val_losses_mbgd_256, label='MBGD (Batch Size 256) Validation Loss', linestyle='--', color='red')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('MBGD (Batch Size 256): Loss vs. Iterations')
-plt.legend()
-
-plt.subplot(1, 2, 2)
-plt.plot(train_acc_mbgd_256, label='MBGD (Batch Size 256) Training Accuracy', color='red')
-plt.plot(val_acc_mbgd_256, label='MBGD (Batch Size 256) Validation Accuracy', linestyle='--', color='red')
-plt.xlabel('Iterations')
-plt.ylabel('Accuracy')
-plt.title('MBGD (Batch Size 256): Accuracy vs. Iterations')
-plt.legend()
-
-plt.tight_layout()
-plt.show()
-
-# Plot for MBGD with Batch Size 512
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.plot(train_losses_mbgd_512, label='MBGD (Batch Size 512) Training Loss', color='purple')
-plt.plot(val_losses_mbgd_512, label='MBGD (Batch Size 512) Validation Loss', linestyle='--', color='purple')
-plt.xlabel('Iterations')
-plt.ylabel('Loss')
-plt.title('MBGD (Batch Size 512): Loss vs. Iterations')
-plt.legend()
-
-plt.subplot(1, 2, 2)
-plt.plot(train_acc_mbgd_512, label='MBGD (Batch Size 512) Training Accuracy', color='purple')
-plt.plot(val_acc_mbgd_512, label='MBGD (Batch Size 512) Validation Accuracy', linestyle='--', color='purple')
-plt.xlabel('Iterations')
-plt.ylabel('Accuracy')
-plt.title('MBGD (Batch Size 512): Accuracy vs. Iterations')
-plt.legend()
-
-plt.tight_layout()
-plt.show()
+plot_figure(train_losses_mbgd_512, val_losses_mbgd_512, 'Loss', 'MBGD (Batch Size 512)', 'mbgd_512_loss.png')
+plot_figure(train_acc_mbgd_512, val_acc_mbgd_512, 'Accuracy', 'MBGD (Batch Size 512)', 'mbgd_512_accuracy.png')
