@@ -3,11 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-import os
 from tqdm import tqdm
-
-plots = 'Plots/'
-os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
