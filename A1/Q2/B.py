@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import os
 
-loss_iterations_plots = 'Plots/'
-os.makedirs(loss_iterations_plots, exist_ok=True)
+plots = 'Plots/'
+os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -97,5 +97,5 @@ plt.title('Loss vs. Iterations (Min-Max Scaling)')
 plt.legend()
 
 plt.tight_layout()
-plt.savefig(os.path.join(loss_iterations_plots, "loss_iterations_plots.png"))
+plt.savefig(os.path.join(plots, "loss_iterations_plots.png"))
 plt.show()

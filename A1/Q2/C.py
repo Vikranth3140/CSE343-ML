@@ -6,8 +6,8 @@ from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_
 import os
 import seaborn as sns
 
-confusion_matrices_plot = 'Plots/'
-os.makedirs(confusion_matrices_plot, exist_ok=True)
+plots = 'Plots/'
+os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -140,6 +140,6 @@ axes[1].set_title("Confusion Matrix (Unscaled Data)")
 axes[1].set_xlabel("Predicted")
 axes[1].set_ylabel("Actual")
 
-plt.savefig(os.path.join(confusion_matrices_plot, "confusion_matrices_plot.png"))
+plt.savefig(os.path.join(plots, "confusion_matrices_plot.png"))
 plt.tight_layout()
 plt.show()

@@ -5,8 +5,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import os
 
-loss_validation_plots = 'Plots/'
-os.makedirs(loss_validation_plots, exist_ok=True)
+plots = 'Plots/'
+os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -90,5 +90,5 @@ plt.ylabel('Accuracy')
 plt.title('Training and Validation Accuracy vs. Iterations')
 plt.legend()
 
-plt.savefig(os.path.join(loss_validation_plots, "loss_validation_plots.png"))
+plt.savefig(os.path.join(plots, "loss_validation_plots.png"))
 plt.show()
