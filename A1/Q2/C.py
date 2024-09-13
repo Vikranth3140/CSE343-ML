@@ -30,7 +30,7 @@ def cross_entropy_loss(y, y_pred):
     return -np.mean(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
 # Logistic Regression using Batch Gradient Descent
-def logistic_regression_extended(X, y, X_val, y_val, lr=0.00001, iterations=10000):
+def logistic_regression_extended(X, y, X_val, y_val, lr=0.0001, iterations=10000):
     # weights = np.zeros(X.shape[1])
     weights = np.random.rand(X.shape[1])
     bias = 0
@@ -80,9 +80,9 @@ def predict(X, weights, bias):
     return sigmoid(z)
 
 X_train_scaled, X_val_scaled = apply_scaling(scaling=True)
-weights_minmax, bias_minmax, train_losses_minmax, val_losses_minmax = logistic_regression_extended(X_train_scaled, y_train, X_val_scaled, y_val)
+weights_minmax, bias_minmax, train_losses_minmax, val_losses_minmax = logistic_regression_extended(X_train_scaled, y_train, X_val_scaled, y_val, lr=0.0001, iterations=10000)
 X_train_unscaled, X_val_unscaled = apply_scaling(scaling=False)
-weights_no_scale, bias_no_scale, train_losses_no_scaling, val_losses_no_scaling = logistic_regression_extended(X_train_unscaled, y_train, X_val_unscaled, y_val)
+weights_no_scale, bias_no_scale, train_losses_no_scaling, val_losses_no_scaling = logistic_regression_extended(X_train_unscaled, y_train, X_val_unscaled, y_val, lr=0.0001, iterations=1000)
 
 y_val_pred_probs = predict(X_val_scaled, weights_minmax, bias_minmax)
 y_val_pred = (y_val_pred_probs >= 0.5).astype(int)
