@@ -1,40 +1,33 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import ElasticNet
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.compose import ColumnTransformer
 
 df = pd.read_csv('Electricity Bill.csv')
 df.columns = df.columns.str.strip()
 
 # Handling missing values
-
-# Filling numerical values with the median
 df.fillna(df.median(numeric_only=True), inplace=True)
 
 # Filling categorical missing values with mode
 for col in df.select_dtypes(include='object').columns:
     df[col].fillna(df[col].mode()[0], inplace=True)
 
+# Encoding categorical features using LabelEncoder
+label_encoders = {}
+categorical_features = df.select_dtypes(include='object').columns
+for col in categorical_features:
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    label_encoders[col] = le
+
 X = df.drop(columns=['Electricity_Bill'])
 y = df['Electricity_Bill']
 
-categorical_features = X.select_dtypes(include='object').columns.tolist()
-numerical_features = X.select_dtypes(include=np.number).columns.tolist()
-
-# One-Hot Encoding for categorical
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('num', 'passthrough', numerical_features),
-        ('cat', OneHotEncoder(drop='first'), categorical_features)])
-
 # Split the dataset into 80:20 train and test splits
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-X_train_preprocessed = preprocessor.fit_transform(X_train)
-X_test_preprocessed = preprocessor.transform(X_test)
 
 def perform_elastic_net(alpha, X_train, X_test, y_train, y_test):
     # Apply ElasticNet
@@ -71,7 +64,7 @@ alpha_values = [0.1, 0.05, 0.01, 0.005, 0.001]
 results = []
 
 for alpha in alpha_values:
-    result = perform_elastic_net(alpha, X_train_preprocessed, X_test_preprocessed, y_train, y_test)
+    result = perform_elastic_net(alpha, X_train, X_test, y_train, y_test)
     results.append(result)
 
 for res in results:
