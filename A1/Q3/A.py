@@ -17,36 +17,36 @@ print(f"Training set size: {train_df.shape}")
 print(f"Testing set size: {test_df.shape}")
 
 # Pair Plots
-def create_pair_plots(df, numerical_features, categorical_feature):
-    plot = sns.pairplot(df[numerical_features + [categorical_feature]], hue=categorical_feature)
-    plt.suptitle(f"Pair Plot - Numerical Features with {categorical_feature} as Hue", y=1.02)
-    plt.savefig(os.path.join(eda_dir, f"pair_plot_{categorical_feature}.png"))
+def create_pair_plots_numerical(df, numerical_features):
+    plot = sns.pairplot(df[numerical_features])
+    plt.suptitle("Pair Plot - Numerical Features Only", y=1.02)
+    plt.savefig(os.path.join(eda_dir, "pair_plot_numerical.png"))
     plt.show()
 
 # Box Plots
-def create_box_plots(df, categorical_features, numerical_feature):
+def create_box_plots_numerical(df, numerical_features):
     plt.figure(figsize=(20, 15))
     
-    for i, category in enumerate(categorical_features, 1):
+    for i, numerical_feature in enumerate(numerical_features, 1):
         plt.subplot(2, 2, i)
-        sns.boxplot(x=category, y=numerical_feature, data=df)
-        plt.title(f"Box Plot - {numerical_feature} by {category}")
+        sns.boxplot(data=df[numerical_feature])
+        plt.title(f"Box Plot - {numerical_feature}")
     
     plt.tight_layout()
-    plt.savefig(os.path.join(eda_dir, f"box_plot_{numerical_feature}.png"))
+    plt.savefig(os.path.join(eda_dir, "box_plot_numerical.png"))
     plt.show()
 
 # Violin Plots
-def create_violin_plots(df, categorical_features, numerical_feature):
+def create_violin_plots_numerical(df, numerical_features):
     plt.figure(figsize=(20, 15))
     
-    for i, category in enumerate(categorical_features, 1):
+    for i, numerical_feature in enumerate(numerical_features, 1):
         plt.subplot(2, 2, i)
-        sns.violinplot(x=category, y=numerical_feature, data=df)
-        plt.title(f"Violin Plot - {numerical_feature} by {category}")
+        sns.violinplot(data=df[numerical_feature])
+        plt.title(f"Violin Plot - {numerical_feature}")
     
     plt.tight_layout()
-    plt.savefig(os.path.join(eda_dir, f"violin_plot_{numerical_feature}.png"))
+    plt.savefig(os.path.join(eda_dir, "violin_plot_numerical.png"))
     plt.show()
 
 # Count Plots
@@ -78,11 +78,11 @@ categorical_features = ['Building_Type', 'Green_Certified', 'Building_Status', '
 numerical_features = ['Electricity_Bill', 'Energy_Consumption_Per_SqM', 'Number_of_Floors', 'Number_of_Residents']
 
 for category in categorical_features:
-    create_pair_plots(df, numerical_features, category)
+    create_pair_plots_numerical(df, numerical_features)
 
-create_box_plots(df, categorical_features, 'Electricity_Bill')
+create_box_plots_numerical(df, numerical_features)
 
-create_violin_plots(df, categorical_features, 'Electricity_Bill')
+create_violin_plots_numerical(df, numerical_features)
 
 create_count_plots(df, categorical_features)
 
