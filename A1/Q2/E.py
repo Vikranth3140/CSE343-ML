@@ -3,7 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import os
 from tqdm import tqdm
+
+plots = 'Plots/'
+os.makedirs(plots, exist_ok=True)
 
 df = pd.read_csv('Heart Disease.csv')
 
@@ -156,3 +160,36 @@ print(f"Accuracy: Mean = {avg_accuracy:.4f} ± {std_accuracy:.4f}")
 print(f"Precision: Mean = {avg_precision:.4f} ± {std_precision:.4f}")
 print(f"Recall: Mean = {avg_recall:.4f} ± {std_recall:.4f}")
 print(f"F1 Score: Mean = {avg_f1:.4f} ± {std_f1:.4f}")
+
+folds = range(1, k+1)
+
+plt.figure(figsize=(12, 8))
+
+plt.subplot(2, 2, 1)
+plt.plot(folds, accuracy_scores, marker='o', linestyle='--')
+plt.title('Accuracy Across Folds')
+plt.xlabel('Fold')
+plt.ylabel('Accuracy')
+
+plt.subplot(2, 2, 2)
+plt.plot(folds, precision_scores, marker='o', linestyle='--')
+plt.title('Precision Across Folds')
+plt.xlabel('Fold')
+plt.ylabel('Precision')
+
+plt.subplot(2, 2, 3)
+plt.plot(folds, recall_scores, marker='o', linestyle='--')
+plt.title('Recall Across Folds')
+plt.xlabel('Fold')
+plt.ylabel('Recall')
+
+plt.subplot(2, 2, 4)
+plt.plot(folds, f1_scores, marker='o', linestyle='--')
+plt.title('F1 Score Across Folds')
+plt.xlabel('Fold')
+plt.ylabel('F1 Score')
+
+plt.savefig(os.path.join(plots, "metrics_across_folds.png"))
+
+plt.tight_layout()
+plt.show()
