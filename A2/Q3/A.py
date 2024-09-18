@@ -4,16 +4,14 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
-
-
+os.makedirs('EDA', exist_ok=True)
 
 # a
 
 labels_df = pd.read_csv('label.csv')
 
 # Dataset Overview
-with open('EDA.txt', 'w') as f:
+with open('Image_Statistics.txt', 'w') as f:
     # Overview of the dataset
     f.write(f"Total number of images: {len(labels_df)}\n\n")
     f.write("Number of images per class:\n")
@@ -39,20 +37,6 @@ with open('EDA.txt', 'w') as f:
         f.write(str(image_size_df.describe()) + "\n")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # b
 
 # Plot the class distribution
@@ -60,7 +44,8 @@ plt.figure(figsize=(12, 6))
 sns.countplot(data=labels_df, x='label', order=labels_df['label'].value_counts().index)
 plt.xticks(rotation=90)
 plt.title("Class Distribution of Human Activity Labels")
-plt.show()
+plt.savefig('EDA/class_distribution.png')
+plt.close()
 
 # Display a few sample images from each class
 def display_sample_images(labels_df, image_directory, num_classes=5):
@@ -77,15 +62,11 @@ def display_sample_images(labels_df, image_directory, num_classes=5):
         axes[i].set_title(row['label'])
         axes[i].axis('off')
     
-    plt.show()
+    plt.savefig('EDA/sample_images.png')
+    plt.close()
 
 # Display sample images from a few classes
 display_sample_images(labels_df, image_directory, num_classes=5)
-
-
-
-
-
 
 
 # c
@@ -93,14 +74,9 @@ display_sample_images(labels_df, image_directory, num_classes=5)
 # Investigate class imbalance
 class_distribution = labels_df['label'].value_counts(normalize=True)
 
-# Plot class distribution to check for imbalance
 plt.figure(figsize=(12, 6))
 sns.barplot(x=class_distribution.index, y=class_distribution.values)
 plt.xticks(rotation=90)
 plt.title("Class Proportion Distribution")
-plt.show()
-
-# Threshold for imbalance (example: if a class has less than 5% of the total images)
-imbalance_threshold = 0.05
-imbalanced_classes = class_distribution[class_distribution < imbalance_threshold].index
-print(f"Imbalanced Classes (less than {imbalance_threshold*100}% of the dataset):\n", imbalanced_classes)
+plt.savefig('EDA/class_proportion_distribution.png')
+plt.close()
