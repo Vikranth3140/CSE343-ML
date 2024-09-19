@@ -1,0 +1,4 @@
+Model: Naive Bayes, Accuracy: 0.2401
+Model: Decision Tree, Accuracy: 0.1214
+Model: Random Forest, Accuracy: 0.2147
+Model: Perceptron, Accuracy: 0.1794
