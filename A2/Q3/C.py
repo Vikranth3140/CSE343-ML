@@ -14,9 +14,6 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
-
-os.makedirs('Plots', exist_ok=True)
-
 labels_df = pd.read_csv('label.csv')
 
 image_directory = 'data'
@@ -33,16 +30,6 @@ def extract_hog_features(image_path):
                               visualize=True)
     return features
 
-hog_features_list = []
-
-for index, row in labels_df.iterrows():
-    image_path = os.path.join(image_directory, row['filename'])
-    
-    # Extract HOG features
-    hog_features = extract_hog_features(image_path)
-    if hog_features is not None:
-        hog_features_list.append(hog_features)
-
 # Extract color histograms
 def extract_color_histogram(image_path, bins=(8, 8, 8)):
     image = cv2.imread(image_path)
@@ -53,19 +40,26 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
     hist = cv2.normalize(hist, hist).flatten()
     return hist
 
+hog_features_list = []
 color_histogram_list = []
 
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
     
-    # Extract HOG features
+    hog_features = extract_hog_features(image_path)
+    if hog_features is not None:
+        hog_features_list.append(hog_features)
+    
     color_histogram = extract_color_histogram(image_path)
     if color_histogram is not None:
         color_histogram_list.append(color_histogram)
 
+if len(hog_features_list) != len(color_histogram_list):
+    raise ValueError("Mismatch between the number of HOG features and color histograms.")
+
 # Combine HOG and Color Histogram features
 combined_features = []
-for hog, color_hist in zip(hog_features_list, color_histogram_list):  # Ensure color_histogram_list is populated
+for hog, color_hist in zip(hog_features_list, color_histogram_list):
     combined_features.append(np.hstack((hog, color_hist)))
 
 # Convert to NumPy array
