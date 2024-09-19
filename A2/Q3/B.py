@@ -32,15 +32,11 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
     hist = cv2.normalize(hist, hist).flatten()
     return hist
 
-def extract_and_plot_color_histogram(image_path, bins=(8, 8, 8)):
+def extract_and_plot_color_histogram(image_path, filename, bins=(8, 8, 8)):
     image = cv2.imread(image_path)
     if image is None:
         return None
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    
-    hist = cv2.calcHist([hsv_image], [0, 1, 2], None, bins, [0, 180, 0, 256, 0, 256])
-    
-    hist = cv2.normalize(hist, hist).flatten()
     
     h_hist = cv2.calcHist([hsv_image], [0], None, [180], [0, 180])
     s_hist = cv2.calcHist([hsv_image], [1], None, [256], [0, 256])
@@ -63,7 +59,7 @@ def extract_and_plot_color_histogram(image_path, bins=(8, 8, 8)):
     plt.xlim([0, 256])
 
     plt.tight_layout()
-
+    
     plot_path = os.path.join('Plots', filename)
     plt.savefig(plot_path)
     plt.close()
