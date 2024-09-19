@@ -11,6 +11,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
 
 os.makedirs('Plots', exist_ok=True)
 
@@ -32,7 +35,6 @@ def extract_hog_features(image_path):
 
 hog_features_list = []
 
-    
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
     
@@ -41,41 +43,55 @@ for index, row in labels_df.iterrows():
     if hog_features is not None:
         hog_features_list.append(hog_features)
 
-# Encode the labels into numerical values
+# Extract color histograms
+def extract_color_histogram(image_path, bins=(8, 8, 8)):
+    image = cv2.imread(image_path)
+    if image is None:
+        return None
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    hist = cv2.calcHist([hsv_image], [0, 1, 2], None, bins, [0, 180, 0, 256, 0, 256])
+    hist = cv2.normalize(hist, hist).flatten()
+    return hist
+
+color_histogram_list = []
+
+for index, row in labels_df.iterrows():
+    image_path = os.path.join(image_directory, row['filename'])
+    
+    # Extract HOG features
+    color_histogram = extract_color_histogram(image_path)
+    if color_histogram is not None:
+        color_histogram_list.append(color_histogram)
+
+# Combine HOG and Color Histogram features
+combined_features = []
+for hog, color_hist in zip(hog_features_list, color_histogram_list):  # Ensure color_histogram_list is populated
+    combined_features.append(np.hstack((hog, color_hist)))
+
+# Convert to NumPy array
+X = np.array(combined_features)
+
+# Normalize features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Apply PCA for dimensionality reduction (optional, tune n_components)
+pca = PCA(n_components=0.95)  # Keep 95% of the variance
+X_pca = pca.fit_transform(X)
+
+# Encode the labels
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
-# Convert the HOG features list to a NumPy array
-X = np.array(hog_features_list)
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
 
-# Split the dataset into an 80:20 train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Random Forest with more trees and tuned parameters
+rf_model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
+rf_model.fit(X_train, y_train)
 
-# Initialize the models
-models = {
-    "Naive Bayes": GaussianNB(),
-    "Decision Tree": DecisionTreeClassifier(random_state=42),
-    "Random Forest": RandomForestClassifier(random_state=42),
-    "Perceptron": Perceptron(random_state=42)
-}
+# Predict and calculate accuracy
+y_pred = rf_model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
 
-# Dictionary to store accuracy results
-results = {}
-
-# Train and test each model
-for model_name, model in models.items():
-    # Train the model
-    model.fit(X_train, y_train)
-    
-    # Test the model
-    y_pred = model.predict(X_test)
-    
-    # Calculate accuracy
-    accuracy = accuracy_score(y_test, y_pred)
-    
-    # Store the results
-    results[model_name] = accuracy
-
-# Display the results
-for model_name, accuracy in results.items():
-    print(f"Model: {model_name}, Accuracy: {accuracy:.4f}")
+print(f"Improved Random Forest Model Accuracy: {accuracy:.4f}")
