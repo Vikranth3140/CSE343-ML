@@ -8,3 +8,6 @@ Model: Random Forest, Accuracy: 0.2532
 
 PCA, Ensemble
 Model: Random Forest, Accuracy: 0.2663
+
+Best parameters for Random Forest: {'bootstrap': False, 'max_depth': None, 'min_samples_leaf': 4, 'min_samples_split': 2, 'n_estimators': 300}
+Stacked Model Accuracy after Hyperparameter Tuning: 0.2365
