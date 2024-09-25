@@ -3,16 +3,14 @@ import pandas as pd
 import os
 from skimage.feature import hog
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import Perceptron
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 labels_df = pd.read_csv('label.csv')
 
@@ -80,12 +78,23 @@ y = label_encoder.fit_transform(labels_df['label'])
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
 
-# Random Forest with more trees and tuned parameters
-rf_model = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
-rf_model.fit(X_train, y_train)
+nb = GaussianNB()
+dt = DecisionTreeClassifier(random_state=42)
+rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
+perc = Perceptron(random_state=42)
 
-# Predict and calculate accuracy
-y_pred = rf_model.predict(X_test)
+# Ensemble using Voting Classifier
+ensemble = VotingClassifier(estimators=[
+    ('nb', nb),
+    ('dt', dt),
+    ('rf', rf),
+    ('perc', perc)
+], voting='hard')
+
+ensemble.fit(X_train, y_train)
+
+y_pred = ensemble.predict(X_test)
+
 accuracy = accuracy_score(y_test, y_pred)
 
-print(f"Improved Random Forest Model Accuracy: {accuracy:.4f}")
+print(f"Ensemble Model Accuracy: {accuracy:.4f}")
