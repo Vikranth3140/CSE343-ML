@@ -3,15 +3,13 @@ import pandas as pd
 import os
 from skimage.feature import hog
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import Perceptron
-from sklearn.metrics import accuracy_score
 
+# Load the labels
 labels_df = pd.read_csv('label.csv')
 
 image_directory = 'data'
@@ -28,7 +26,7 @@ def extract_hog_features(image_path):
                               visualize=True)
     return features
 
-# Extract color histograms
+# Function to extract color histograms
 def extract_color_histogram(image_path, bins=(8, 8, 8)):
     image = cv2.imread(image_path)
     if image is None:
@@ -38,16 +36,19 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
     hist = cv2.normalize(hist, hist).flatten()
     return hist
 
+# Extract HOG features and color histograms
 hog_features_list = []
 color_histogram_list = []
 
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
     
+    # Extract HOG features
     hog_features = extract_hog_features(image_path)
     if hog_features is not None:
         hog_features_list.append(hog_features)
     
+    # Extract color histograms
     color_histogram = extract_color_histogram(image_path)
     if color_histogram is not None:
         color_histogram_list.append(color_histogram)
@@ -67,7 +68,7 @@ X = np.array(combined_features)
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-# Apply PCA for dimensionality reduction (optional, tune n_components)
+# Apply PCA for dimensionality reduction
 pca = PCA(n_components=0.95)  # Keep 95% of the variance
 X_pca = pca.fit_transform(X)
 
@@ -78,23 +79,26 @@ y = label_encoder.fit_transform(labels_df['label'])
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
 
-nb = GaussianNB()
-dt = DecisionTreeClassifier(random_state=42)
-rf = RandomForestClassifier(n_estimators=200, max_depth=10, random_state=42)
-perc = Perceptron(random_state=42)
+# Initialize the Random Forest model with Grid Search for hyperparameter tuning
+rf = RandomForestClassifier(random_state=42)
+param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'bootstrap': [True, False]
+}
 
-# Ensemble using Voting Classifier
-ensemble = VotingClassifier(estimators=[
-    ('nb', nb),
-    ('dt', dt),
-    ('rf', rf),
-    ('perc', perc)
-], voting='hard')
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
+grid_search.fit(X_train, y_train)
 
-ensemble.fit(X_train, y_train)
+# Best parameters from Grid Search
+best_rf = grid_search.best_estimator_
 
-y_pred = ensemble.predict(X_test)
+# Test the best model
+y_pred = best_rf.predict(X_test)
 
+# Calculate accuracy
 accuracy = accuracy_score(y_test, y_pred)
 
-print(f"Ensemble Model Accuracy: {accuracy:.4f}")
+print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
