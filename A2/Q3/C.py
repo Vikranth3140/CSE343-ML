@@ -3,11 +3,15 @@ import pandas as pd
 import os
 from skimage.feature import hog
 import numpy as np
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, StackingClassifier
+from sklearn.linear_model import Perceptron
 from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
 
 # Load the labels
 labels_df = pd.read_csv('label.csv')
@@ -26,79 +30,45 @@ def extract_hog_features(image_path):
                               visualize=True)
     return features
 
-# Function to extract color histograms
-def extract_color_histogram(image_path, bins=(8, 8, 8)):
-    image = cv2.imread(image_path)
-    if image is None:
-        return None
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    hist = cv2.calcHist([hsv_image], [0, 1, 2], None, bins, [0, 180, 0, 256, 0, 256])
-    hist = cv2.normalize(hist, hist).flatten()
-    return hist
-
-# Extract HOG features and color histograms
+# Load images and extract features
 hog_features_list = []
-color_histogram_list = []
 
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
-    
-    # Extract HOG features
     hog_features = extract_hog_features(image_path)
     if hog_features is not None:
         hog_features_list.append(hog_features)
-    
-    # Extract color histograms
-    color_histogram = extract_color_histogram(image_path)
-    if color_histogram is not None:
-        color_histogram_list.append(color_histogram)
 
-if len(hog_features_list) != len(color_histogram_list):
-    raise ValueError("Mismatch between the number of HOG features and color histograms.")
-
-# Combine HOG and Color Histogram features
-combined_features = []
-for hog, color_hist in zip(hog_features_list, color_histogram_list):
-    combined_features.append(np.hstack((hog, color_hist)))
-
-# Convert to NumPy array
-X = np.array(combined_features)
-
-# Normalize features
-scaler = StandardScaler()
-X = scaler.fit_transform(X)
-
-# Apply PCA for dimensionality reduction
-pca = PCA(n_components=0.95)  # Keep 95% of the variance
-X_pca = pca.fit_transform(X)
-
-# Encode the labels
+# Encode the labels into numerical values
 label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
-# Train-test split
+# Convert the HOG features list to a NumPy array
+X = np.array(hog_features_list)
+
+# Apply PCA to reduce dimensionality
+pca = PCA(n_components=50, random_state=42)
+X_pca = pca.fit_transform(X)
+
+# Split the dataset into an 80:20 train-test split
 X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
 
-# Initialize the Random Forest model with Grid Search for hyperparameter tuning
-rf = RandomForestClassifier(random_state=42)
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True, False]
-}
+# Initialize base models for stacking
+base_models = [
+    ('naive_bayes', GaussianNB()),
+    ('decision_tree', DecisionTreeClassifier(random_state=42)),
+    ('random_forest', RandomForestClassifier(random_state=42)),
+    ('perceptron', Perceptron(random_state=42))
+]
 
-grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
-grid_search.fit(X_train, y_train)
+# Create the Stacking Classifier
+stacked_model = StackingClassifier(estimators=base_models, final_estimator=RandomForestClassifier(random_state=42))
 
-# Best parameters from Grid Search
-best_rf = grid_search.best_estimator_
+# Train the stacked model
+stacked_model.fit(X_train, y_train)
 
-# Test the best model
-y_pred = best_rf.predict(X_test)
-
-# Calculate accuracy
+# Test the model and calculate accuracy
+y_pred = stacked_model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 
-print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
+print(f"Stacked Model Accuracy after PCA: {accuracy:.4f}")

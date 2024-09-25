@@ -5,3 +5,6 @@ Model: Perceptron, Accuracy: 0.1794
 
 GridSearch
 Model: Random Forest, Accuracy: 0.2532
+
+PCA, Ensemble
+Model: Random Forest, Accuracy: 0.2663
