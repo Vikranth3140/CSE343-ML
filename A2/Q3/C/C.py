@@ -10,7 +10,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
 # Load the labels
-labels_df = pd.read_csv('label.csv')
+label_file_path = 'label.csv'45g4
+labels_df = pd.read_csv(label_file_path)
 
 image_directory = 'data'
 
@@ -81,8 +82,7 @@ label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
 # Train-test split
-X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
-    X_pca, y, file_names, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(X_pca, y, file_names, test_size=0.2, random_state=42)
 
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
@@ -111,5 +111,28 @@ print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
 misclassified_indices = np.where(y_pred != y_test)[0]
 
 print("Misclassified Images:")
+misclassified_images = []
 for index in misclassified_indices:
-    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+    misclassified_file = file_test[index]
+    misclassified_images.append(misclassified_file)
+    print(f"File: {misclassified_file}, Predicted: {label_encoder.inverse_transform([y_pred[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+
+# Remove misclassified images from the dataset
+if misclassified_images:
+    print("\nRemoving misclassified images...")
+    # Filter out the misclassified images from the labels DataFrame
+    labels_df_filtered = labels_df[~labels_df['filename'].isin(misclassified_images)]
+
+    # Save the updated labels DataFrame back to the CSV file
+    labels_df_filtered.to_csv(label_file_path, index=False)
+
+    # Delete the misclassified images from the image directory
+    for image_name in misclassified_images:
+        image_path = os.path.join(image_directory, image_name)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+            print(f"Deleted: {image_path}")
+        else:
+            print(f"File not found: {image_path}")
+
+print("Finished removing misclassified images from the dataset.")
