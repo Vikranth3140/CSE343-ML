@@ -87,8 +87,8 @@ X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
 param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
+    'n_estimators': [100, 200, 300, 500],
+    'max_depth': [None, 10, 20, 30, 50],
     'min_samples_split': [2, 5, 10],
     'min_samples_leaf': [1, 2, 4],
     'bootstrap': [True, False]
