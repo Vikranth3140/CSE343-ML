@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
+import pickle
 
 # Load the labels
 labels_df = pd.read_csv('label.csv')
@@ -100,16 +101,25 @@ grid_search.fit(X_train, y_train)
 # Best parameters from Grid Search
 best_rf = grid_search.best_estimator_
 
-# Test the best model
-y_pred = best_rf.predict(X_test)
+# Save the best model to a file
+model_filename = 'best_random_forest_model.pkl'
+with open(model_filename, 'wb') as file:
+    pickle.dump(best_rf, file)
+
+# Load the model from the file
+with open(model_filename, 'rb') as file:
+    loaded_model = pickle.load(file)
+
+# Test the loaded model
+y_pred_loaded = loaded_model.predict(X_test)
 
 # Calculate accuracy
-accuracy = accuracy_score(y_test, y_pred)
-print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
+accuracy_loaded = accuracy_score(y_test, y_pred_loaded)
+print(f"Loaded Random Forest Model Accuracy: {accuracy_loaded:.4f}")
 
 # Identify misclassified images
-misclassified_indices = np.where(y_pred != y_test)[0]
+misclassified_indices = np.where(y_pred_loaded != y_test)[0]
 
 print("Misclassified Images:")
 for index in misclassified_indices:
-    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred_loaded[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
