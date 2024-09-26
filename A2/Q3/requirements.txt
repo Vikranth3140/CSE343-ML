@@ -1,6 +1,0 @@
-opencv-python
-pandas
-scikit-image
-matplotlib
-Pillow
-seaborn
