@@ -5,7 +5,7 @@ from skimage.feature import hog
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
 
@@ -39,6 +39,7 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
 # Extract HOG features and color histograms
 hog_features_list = []
 color_histogram_list = []
+file_names = []
 
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
@@ -52,6 +53,9 @@ for index, row in labels_df.iterrows():
     color_histogram = extract_color_histogram(image_path)
     if color_histogram is not None:
         color_histogram_list.append(color_histogram)
+    
+    # Store file name for potential misclassification analysis
+    file_names.append(row['filename'])
 
 if len(hog_features_list) != len(color_histogram_list):
     raise ValueError("Mismatch between the number of HOG features and color histograms.")
@@ -69,7 +73,7 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
 # Apply PCA for dimensionality reduction
-pca = PCA(n_components=0.95)  # Keep 95% of the variance
+pca = PCA(n_components=0.95, random_state=42)
 X_pca = pca.fit_transform(X)
 
 # Encode the labels
@@ -77,7 +81,8 @@ label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
 # Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
+    X_pca, y, file_names, test_size=0.2, random_state=42)
 
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
@@ -100,5 +105,11 @@ y_pred = best_rf.predict(X_test)
 
 # Calculate accuracy
 accuracy = accuracy_score(y_test, y_pred)
-
 print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
+
+# Identify misclassified images
+misclassified_indices = np.where(y_pred != y_test)[0]
+
+print("Misclassified Images:")
+for index in misclassified_indices:
+    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
