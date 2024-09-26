@@ -81,8 +81,7 @@ label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
 # Train-test split
-X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
-    X_pca, y, file_names, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(X_pca, y, file_names, test_size=0.2, random_state=42)
 
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
