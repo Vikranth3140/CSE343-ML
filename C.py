@@ -4,7 +4,7 @@ import os
 from skimage.feature import hog
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
@@ -74,7 +74,7 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
 # Apply PCA for dimensionality reduction
-pca = PCA(n_components=0.95, random_state=42)
+pca = PCA(n_components=0.80, random_state=42)
 X_pca = pca.fit_transform(X)
 
 # Encode the labels
@@ -87,39 +87,87 @@ X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
 
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
-param_grid = {
+param_grid_rf = {
     'n_estimators': [100, 200, 300, 500],
     'max_depth': [None, 10, 20, 30, 50],
     'min_samples_split': [2, 5, 10],
     'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True, False]
+    'bootstrap': [True]
 }
 
-grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
-grid_search.fit(X_train, y_train)
+grid_search_rf = GridSearchCV(estimator=rf, param_grid=param_grid_rf, cv=5, n_jobs=-1, verbose=2)
+grid_search_rf.fit(X_train, y_train)
 
-# Best parameters from Grid Search
-best_rf = grid_search.best_estimator_
+# Initialize the AdaBoost model with Grid Search for hyperparameter tuning
+ada_boost = AdaBoostClassifier(random_state=42)
+param_grid_ada = {
+    'n_estimators': [50, 100, 200],
+    'learning_rate': [0.01, 0.1, 0.5, 1.0]
+}
 
-# Save the best model to a file
-model_filename = 'best_random_forest_model.pkl'
-with open(model_filename, 'wb') as file:
+grid_search_ada = GridSearchCV(estimator=ada_boost, param_grid=param_grid_ada, cv=5, n_jobs=-1, verbose=2)
+grid_search_ada.fit(X_train, y_train)
+
+# Get the best parameters and model for Random Forest
+best_rf = grid_search_rf.best_estimator_
+best_rf_params = grid_search_rf.best_params_
+best_rf_accuracy = grid_search_rf.best_score_
+
+# Save the best Random Forest model to a file
+rf_model_filename = 'best_random_forest_model.pkl'
+with open(rf_model_filename, 'wb') as file:
     pickle.dump(best_rf, file)
 
-# Load the model from the file
-with open(model_filename, 'rb') as file:
-    loaded_model = pickle.load(file)
+# Get the best parameters and model for AdaBoost
+best_ada = grid_search_ada.best_estimator_
+best_ada_params = grid_search_ada.best_params_
+best_ada_accuracy = grid_search_ada.best_score_
 
-# Test the loaded model
-y_pred_loaded = loaded_model.predict(X_test)
+# Save the best AdaBoost model to a file
+ada_model_filename = 'best_ada_boost_model.pkl'
+with open(ada_model_filename, 'wb') as file:
+    pickle.dump(best_ada, file)
 
-# Calculate accuracy
-accuracy_loaded = accuracy_score(y_test, y_pred_loaded)
-print(f"Loaded Random Forest Model Accuracy: {accuracy_loaded:.4f}")
+# Save all accuracies to a text file
+with open('accuracies_for_each_case.txt', 'w') as f:
+    f.write(f"Random Forest Best Parameters: {best_rf_params}\n")
+    f.write(f"Random Forest Best Accuracy: {best_rf_accuracy:.4f}\n\n")
+    f.write(f"AdaBoost Best Parameters: {best_ada_params}\n")
+    f.write(f"AdaBoost Best Accuracy: {best_ada_accuracy:.4f}\n\n")
 
-# Identify misclassified images
-misclassified_indices = np.where(y_pred_loaded != y_test)[0]
+# Load and test the best models
+with open(rf_model_filename, 'rb') as file:
+    loaded_rf_model = pickle.load(file)
+rf_pred_loaded = loaded_rf_model.predict(X_test)
+rf_accuracy_loaded = accuracy_score(y_test, rf_pred_loaded)
 
-print("Misclassified Images:")
-for index in misclassified_indices:
-    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred_loaded[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+with open(ada_model_filename, 'rb') as file:
+    loaded_ada_model = pickle.load(file)
+ada_pred_loaded = loaded_ada_model.predict(X_test)
+ada_accuracy_loaded = accuracy_score(y_test, ada_pred_loaded)
+
+# Output the results
+print(f"Loaded Random Forest Model Accuracy: {rf_accuracy_loaded:.4f}")
+print(f"Loaded AdaBoost Model Accuracy: {ada_accuracy_loaded:.4f}")
+
+# Identify and print misclassified images for Random Forest
+print("Random Forest Misclassified Images:")
+rf_misclassified_indices = np.where(rf_pred_loaded != y_test)[0]
+for index in rf_misclassified_indices:
+    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([rf_pred_loaded[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+
+# Identify and print misclassified images for AdaBoost
+print("AdaBoost Misclassified Images:")
+ada_misclassified_indices = np.where(ada_pred_loaded != y_test)[0]
+for index in ada_misclassified_indices:
+    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([ada_pred_loaded[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+
+# Return the best parameters and accuracy for Random Forest and AdaBoost
+results = {
+    "Random Forest Best Parameters": best_rf_params,
+    "Random Forest Best Accuracy": best_rf_accuracy,
+    "AdaBoost Best Parameters": best_ada_params,
+    "AdaBoost Best Accuracy": best_ada_accuracy
+}
+
+print(results)
