@@ -80,7 +80,7 @@ def extract_hu_moments(image_path):
     return hu_moments
 
 # Extract ORB features
-def extract_orb_features(image_path):
+def extract_orb_features(image_path, max_features=128):
     image = cv2.imread(image_path)
     if image is None:
         return None
@@ -88,9 +88,15 @@ def extract_orb_features(image_path):
     orb = cv2.ORB_create()
     keypoints, descriptors = orb.detectAndCompute(gray_image, None)
     if descriptors is not None:
+        # Ensure descriptors have a consistent size (max_features)
+        if descriptors.shape[0] > max_features:
+            descriptors = descriptors[:max_features, :]
+        elif descriptors.shape[0] < max_features:
+            padding = np.zeros((max_features - descriptors.shape[0], descriptors.shape[1]))
+            descriptors = np.vstack((descriptors, padding))
         return descriptors.flatten()
     else:
-        return np.zeros(128)  # Return a zero array if no keypoints are detected
+        return np.zeros(max_features * 32)  # ORB descriptors are 32-dimensional
 
 # Combine all features into a single feature vector
 def extract_combined_features(image_path):
