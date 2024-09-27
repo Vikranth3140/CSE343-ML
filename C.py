@@ -1,7 +1,7 @@
 import cv2
 import pandas as pd
 import os
-from skimage.feature import hog
+from skimage.feature import hog, local_binary_pattern
 import numpy as np
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
@@ -28,7 +28,7 @@ def extract_hog_features(image_path):
                               visualize=True)
     return features
 
-# Function to extract color histograms
+# Extract color histograms
 def extract_color_histogram(image_path, bins=(8, 8, 8)):
     image = cv2.imread(image_path)
     if image is None:
@@ -38,37 +38,95 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
     hist = cv2.normalize(hist, hist).flatten()
     return hist
 
-# Extract HOG features and color histograms
-hog_features_list = []
-color_histogram_list = []
+# Extract LBP features
+def extract_lbp_features(image_path, radius=1, n_points=8):
+    image = cv2.imread(image_path)
+    if image is None:
+        return None
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    lbp = local_binary_pattern(gray_image, n_points, radius, method='uniform')
+    (hist, _) = np.histogram(lbp.ravel(),
+                             bins=np.arange(0, n_points + 3),
+                             range=(0, n_points + 2))
+    hist = hist.astype("float")
+    hist /= (hist.sum() + 1e-7)  # Normalize the histogram
+    return hist
+
+# Extract Gabor features
+def extract_gabor_features(image_path):
+    image = cv2.imread(image_path)
+    if image is None:
+        return None
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gabor_features = []
+    for theta in range(4):  # Gabor kernel orientation
+        theta = theta / 4. * np.pi
+        for sigma in (1, 3):  # Scale
+            for lamda in np.pi/4 * np.array([0.5, 1.0]):  # Wavelength
+                kernel = cv2.getGaborKernel((21, 21), sigma, theta, lamda, 0.5, 0, ktype=cv2.CV_32F)
+                fimg = cv2.filter2D(gray_image, cv2.CV_8UC3, kernel)
+                gabor_features.append(fimg.mean())
+                gabor_features.append(fimg.var())
+    return np.array(gabor_features)
+
+# Extract Hu moments
+def extract_hu_moments(image_path):
+    image = cv2.imread(image_path)
+    if image is None:
+        return None
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    moments = cv2.moments(gray_image)
+    hu_moments = cv2.HuMoments(moments).flatten()
+    return hu_moments
+
+# Extract ORB features
+def extract_orb_features(image_path):
+    image = cv2.imread(image_path)
+    if image is None:
+        return None
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    orb = cv2.ORB_create()
+    keypoints, descriptors = orb.detectAndCompute(gray_image, None)
+    if descriptors is not None:
+        return descriptors.flatten()
+    else:
+        return np.zeros(128)  # Return a zero array if no keypoints are detected
+
+# Combine all features into a single feature vector
+def extract_combined_features(image_path):
+    hog_features = extract_hog_features(image_path)
+    color_histogram = extract_color_histogram(image_path)
+    lbp_features = extract_lbp_features(image_path)
+    gabor_features = extract_gabor_features(image_path)
+    hu_moments = extract_hu_moments(image_path)
+    orb_features = extract_orb_features(image_path)
+
+    combined_features = np.hstack((
+        hog_features,
+        color_histogram,
+        lbp_features,
+        gabor_features,
+        hu_moments,
+        orb_features
+    ))
+
+    return combined_features
+
+# Extract features from all images
+features_list = []
 file_names = []
 
 for index, row in labels_df.iterrows():
     image_path = os.path.join(image_directory, row['filename'])
     
-    # Extract HOG features
-    hog_features = extract_hog_features(image_path)
-    if hog_features is not None:
-        hog_features_list.append(hog_features)
-    
-    # Extract color histograms
-    color_histogram = extract_color_histogram(image_path)
-    if color_histogram is not None:
-        color_histogram_list.append(color_histogram)
-    
-    # Store file name for potential misclassification analysis
-    file_names.append(row['filename'])
-
-if len(hog_features_list) != len(color_histogram_list):
-    raise ValueError("Mismatch between the number of HOG features and color histograms.")
-
-# Combine HOG and Color Histogram features
-combined_features = []
-for hog, color_hist in zip(hog_features_list, color_histogram_list):
-    combined_features.append(np.hstack((hog, color_hist)))
+    # Extract combined features
+    combined_features = extract_combined_features(image_path)
+    if combined_features is not None:
+        features_list.append(combined_features)
+        file_names.append(row['filename'])
 
 # Convert to NumPy array
-X = np.array(combined_features)
+X = np.array(features_list)
 
 # Normalize features
 scaler = StandardScaler()
