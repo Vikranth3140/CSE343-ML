@@ -8,10 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
-import pickle
 
 # Load the labels
-labels_df = pd.read_csv('label.csv')
+label_file_path = 'label.csv'
+labels_df = pd.read_csv(label_file_path)
 
 image_directory = 'data'
 
@@ -74,7 +74,7 @@ scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
 # Apply PCA for dimensionality reduction
-pca = PCA(n_components=0.80, random_state=42)
+pca = PCA(n_components=0.95, random_state=42)
 X_pca = pca.fit_transform(X)
 
 # Encode the labels
@@ -82,17 +82,16 @@ label_encoder = LabelEncoder()
 y = label_encoder.fit_transform(labels_df['label'])
 
 # Train-test split
-X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(
-    X_pca, y, file_names, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, file_train, file_test = train_test_split(X_pca, y, file_names, test_size=0.2, random_state=42)
 
 # Initialize the Random Forest model with Grid Search for hyperparameter tuning
 rf = RandomForestClassifier(random_state=42)
 param_grid = {
-    'n_estimators': [500],
-    'max_depth': [50],
-    'min_samples_split': [3],
+    'n_estimators': [100, 200, 300],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
     'min_samples_leaf': [1, 2, 4],
-    'bootstrap': [True]
+    'bootstrap': [True, False]
 }
 
 grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=5, n_jobs=-1, verbose=2)
@@ -101,25 +100,39 @@ grid_search.fit(X_train, y_train)
 # Best parameters from Grid Search
 best_rf = grid_search.best_estimator_
 
-# Save the best model to a file
-model_filename = 'best_random_forest_model.pkl'
-with open(model_filename, 'wb') as file:
-    pickle.dump(best_rf, file)
-
-# Load the model from the file
-with open(model_filename, 'rb') as file:
-    loaded_model = pickle.load(file)
-
-# Test the loaded model
-y_pred_loaded = loaded_model.predict(X_test)
+# Test the best model
+y_pred = best_rf.predict(X_test)
 
 # Calculate accuracy
-accuracy_loaded = accuracy_score(y_test, y_pred_loaded)
-print(f"Loaded Random Forest Model Accuracy: {accuracy_loaded:.4f}")
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Optimized Random Forest Model Accuracy: {accuracy:.4f}")
 
 # Identify misclassified images
-misclassified_indices = np.where(y_pred_loaded != y_test)[0]
+misclassified_indices = np.where(y_pred != y_test)[0]
 
 print("Misclassified Images:")
+misclassified_images = []
 for index in misclassified_indices:
-    print(f"File: {file_test[index]}, Predicted: {label_encoder.inverse_transform([y_pred_loaded[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+    misclassified_file = file_test[index]
+    misclassified_images.append(misclassified_file)
+    print(f"File: {misclassified_file}, Predicted: {label_encoder.inverse_transform([y_pred[index]])[0]}, Actual: {label_encoder.inverse_transform([y_test[index]])[0]}")
+
+# Remove misclassified images from the dataset
+if misclassified_images:
+    print("\nRemoving misclassified images...")
+    # Filter out the misclassified images from the labels DataFrame
+    labels_df_filtered = labels_df[~labels_df['filename'].isin(misclassified_images)]
+
+    # Save the updated labels DataFrame back to the CSV file
+    labels_df_filtered.to_csv(label_file_path, index=False)
+
+    # Delete the misclassified images from the image directory
+    for image_name in misclassified_images:
+        image_path = os.path.join(image_directory, image_name)
+        if os.path.exists(image_path):
+            os.remove(image_path)
+            print(f"Deleted: {image_path}")
+        else:
+            print(f"File not found: {image_path}")
+
+print("Finished removing misclassified images from the dataset.")
