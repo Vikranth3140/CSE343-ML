@@ -94,15 +94,18 @@ def extract_combined_features(image_path):
     gabor_features = extract_gabor_features(image_path)
     color_histogram = extract_color_histogram(image_path)
 
-    combined_features = np.hstack((
-        edges,
-        orb_features,
-        hog_features,
-        lbp_features,
-        gabor_features,
-        color_histogram
-    ))
+    # Ensure all features have a consistent length
+    feature_list = [edges, orb_features, hog_features, lbp_features, gabor_features, color_histogram]
+    max_length = max(len(f) for f in feature_list if f is not None)
 
+    padded_features = []
+    for feature in feature_list:
+        if feature is not None:
+            if len(feature) < max_length:
+                feature = np.pad(feature, (0, max_length - len(feature)), mode='constant')
+            padded_features.append(feature)
+
+    combined_features = np.hstack(padded_features)
     return combined_features
 
 # Extract features from all images
