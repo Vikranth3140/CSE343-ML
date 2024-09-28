@@ -99,7 +99,6 @@ def extract_combined_features(image_path):
     gabor_features = extract_gabor_features(image_path)
     color_histogram = extract_color_histogram(image_path)
 
-    # Ensure all features have a consistent length
     feature_list = [edges, orb_features, hog_features, lbp_features, gabor_features, color_histogram]
     max_length = max(len(f) for f in feature_list if f is not None)
 
@@ -113,23 +112,36 @@ def extract_combined_features(image_path):
     combined_features = np.hstack(padded_features)
     return combined_features
 
-# Extract features and save to CSV
-features_list = []
-labels = []
-file_names = []
+# Process images in batches
+batch_size = 1000  # Adjust batch size according to your system’s memory
+num_images = len(labels_df)
+num_batches = num_images // batch_size + (num_images % batch_size != 0)
 
-for index, row in labels_df.iterrows():
-    image_path = os.path.join(image_directory, row['filename'])
-    combined_features = extract_combined_features(image_path)
-    if combined_features is not None:
-        features_list.append(combined_features)
-        labels.append(row['label'])
-        file_names.append(row['filename'])
+for batch_num in range(num_batches):
+    start_index = batch_num * batch_size
+    end_index = min((batch_num + 1) * batch_size, num_images)
+    
+    features_list = []
+    labels = []
+    file_names = []
+    
+    for index, row in labels_df.iloc[start_index:end_index].iterrows():
+        image_path = os.path.join(image_directory, row['filename'])
+        combined_features = extract_combined_features(image_path)
+        if combined_features is not None:
+            features_list.append(combined_features)
+            labels.append(row['label'])
+            file_names.append(row['filename'])
+    
+    # Convert to DataFrame
+    batch_df = pd.DataFrame(features_list)
+    batch_df['label'] = labels
+    batch_df['filename'] = file_names
+    
+    # Append to the CSV file
+    if batch_num == 0:
+        batch_df.to_csv('extracted_features.csv', index=False, mode='w')
+    else:
+        batch_df.to_csv('extracted_features.csv', index=False, header=False, mode='a')
 
-# Convert to DataFrame
-features_df = pd.DataFrame(features_list)
-features_df['label'] = labels
-features_df['filename'] = file_names
-
-# Save to CSV
-features_df.to_csv('extracted_features.csv', index=False)
+    print(f"Processed batch {batch_num + 1} of {num_batches}")
