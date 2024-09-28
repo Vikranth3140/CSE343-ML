@@ -20,12 +20,20 @@ def extract_edges_pca(image_path, pca_model=None):
         return None
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur_image = cv2.GaussianBlur(gray_image, (11, 11), 0)
-    edges = cv2.Canny(blur_image, 100, 200).flatten()
-    
+    edges = cv2.Canny(blur_image, 100, 200)
+
+    # Flatten the edges and pad to a fixed length
+    edges_flat = edges.flatten()
+    fixed_length = 256 * 256  # Assuming the images are resized to 256x256
+    if len(edges_flat) < fixed_length:
+        edges_flat = np.pad(edges_flat, (0, fixed_length - len(edges_flat)), mode='constant')
+    else:
+        edges_flat = edges_flat[:fixed_length]  # Truncate if longer
+
     if pca_model is not None:
-        edges = pca_model.transform([edges])[0]  # Apply PCA
+        edges_flat = pca_model.transform([edges_flat])[0]  # Apply PCA
     
-    return edges
+    return edges_flat
 
 # Function to extract ORB features
 def extract_orb_features(image_path, max_features=128):
