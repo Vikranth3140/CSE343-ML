@@ -3,21 +3,31 @@ import numpy as np
 import pandas as pd
 import os
 from skimage.feature import hog, local_binary_pattern
+from sklearn.decomposition import PCA
 
 # Load the labels
 labels_df = pd.read_csv('label.csv')
 
 image_directory = 'data'
 
-def extract_edges(image_path):
+# Define the PCA model for edges
+pca = PCA(n_components=50)  # Adjust the number of components as needed
+
+# Function to extract edges and apply PCA
+def extract_edges_pca(image_path, pca_model=None):
     image = cv2.imread(image_path)
     if image is None:
         return None
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur_image = cv2.GaussianBlur(gray_image, (11, 11), 0)
-    edges = cv2.Canny(blur_image, 100, 200)
-    return edges.flatten()
+    edges = cv2.Canny(blur_image, 100, 200).flatten()
+    
+    if pca_model is not None:
+        edges = pca_model.transform([edges])[0]  # Apply PCA
+    
+    return edges
 
+# Function to extract ORB features
 def extract_orb_features(image_path, max_features=128):
     image = cv2.imread(image_path)
     if image is None:
@@ -35,25 +45,18 @@ def extract_orb_features(image_path, max_features=128):
     else:
         return np.zeros(max_features * 32)
 
+# Function to extract HOG features
 def extract_hog_features(image_path):
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     if image is None:
         return None
     image = cv2.resize(image, (256, 256))
     blur_image = cv2.GaussianBlur(image, (11,11), 0)
-    features, _ = hog(blur_image, pixels_per_cell=(8, 8), block_norm='L2-Hys', visualize=True)
+    features, _ = hog(blur_image, pixels_per_cell=(8, 8), block_norm='L2-Hys', visualize=False)
     
-    # Compute mean, median, variance of HOG features
-    mean_hog = np.mean(features)
-    median_hog = np.median(features)
-    var_hog = np.var(features)
-    
-    # Add these statistics to the HOG features
-    hog_stats = np.array([mean_hog, median_hog, var_hog])
-    combined_hog_features = np.concatenate([features, hog_stats])
-    
-    return combined_hog_features
+    return features
 
+# Function to extract LBP features
 def extract_lbp_features(image_path, radius=1, n_points=8):
     image = cv2.imread(image_path)
     if image is None:
@@ -65,22 +68,7 @@ def extract_lbp_features(image_path, radius=1, n_points=8):
     hist /= (hist.sum() + 1e-7)
     return hist
 
-def extract_gabor_features(image_path):
-    image = cv2.imread(image_path)
-    if image is None:
-        return None
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gabor_features = []
-    for theta in range(4):
-        theta = theta / 4. * np.pi
-        for sigma in (1, 3):
-            for lamda in np.pi / 4 * np.array([0.5, 1.0]):
-                kernel = cv2.getGaborKernel((21, 21), sigma, theta, lamda, 0.5, 0, ktype=cv2.CV_32F)
-                filtered_img = cv2.filter2D(gray_image, cv2.CV_8UC3, kernel)
-                gabor_features.append(filtered_img.mean())
-                gabor_features.append(filtered_img.var())
-    return np.array(gabor_features)
-
+# Function to extract color histogram features
 def extract_color_histogram(image_path, bins=(8, 8, 8)):
     image = cv2.imread(image_path)
     if image is None:
@@ -91,15 +79,14 @@ def extract_color_histogram(image_path, bins=(8, 8, 8)):
     return hist
 
 # Combine all features into a single feature vector
-def extract_combined_features(image_path):
-    edges = extract_edges(image_path)
+def extract_combined_features(image_path, pca_model):
+    edges_pca = extract_edges_pca(image_path, pca_model=pca_model)
     orb_features = extract_orb_features(image_path)
     hog_features = extract_hog_features(image_path)
     lbp_features = extract_lbp_features(image_path)
-    gabor_features = extract_gabor_features(image_path)
     color_histogram = extract_color_histogram(image_path)
 
-    feature_list = [edges, orb_features, hog_features, lbp_features, gabor_features, color_histogram]
+    feature_list = [edges_pca, orb_features, hog_features, lbp_features, color_histogram]
     max_length = max(len(f) for f in feature_list if f is not None)
 
     padded_features = []
@@ -117,31 +104,49 @@ batch_size = 1000  # Adjust batch size according to your system’s memory
 num_images = len(labels_df)
 num_batches = num_images // batch_size + (num_images % batch_size != 0)
 
+# First pass: fit PCA on edges
+all_edges = []
+
 for batch_num in range(num_batches):
     start_index = batch_num * batch_size
     end_index = min((batch_num + 1) * batch_size, num_images)
-    
+
+    for index, row in labels_df.iloc[start_index:end_index].iterrows():
+        image_path = os.path.join(image_directory, row['filename'])
+        edges = extract_edges_pca(image_path)  # Extract edges without PCA
+        if edges is not None:
+            all_edges.append(edges)
+
+# Fit PCA on the collected edges
+all_edges = np.array(all_edges)
+pca.fit(all_edges)
+
+# Second pass: extract features using PCA on edges
+for batch_num in range(num_batches):
+    start_index = batch_num * batch_size
+    end_index = min((batch_num + 1) * batch_size, num_images)
+
     features_list = []
     labels = []
     file_names = []
-    
+
     for index, row in labels_df.iloc[start_index:end_index].iterrows():
         image_path = os.path.join(image_directory, row['filename'])
-        combined_features = extract_combined_features(image_path)
+        combined_features = extract_combined_features(image_path, pca_model=pca)
         if combined_features is not None:
             features_list.append(combined_features)
             labels.append(row['label'])
             file_names.append(row['filename'])
-    
+
     # Convert to DataFrame
     batch_df = pd.DataFrame(features_list)
     batch_df['label'] = labels
     batch_df['filename'] = file_names
-    
+
     # Append to the CSV file
     if batch_num == 0:
-        batch_df.to_csv('extracted_features.csv', index=False, mode='w')
+        batch_df.to_csv('extracted_features_pca.csv', index=False, mode='w')
     else:
-        batch_df.to_csv('extracted_features.csv', index=False, header=False, mode='a')
+        batch_df.to_csv('extracted_features_pca.csv', index=False, header=False, mode='a')
 
     print(f"Processed batch {batch_num + 1} of {num_batches}")
