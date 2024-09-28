@@ -2,6 +2,8 @@ import os
 import librosa
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import librosa.display
 
 # a
 
@@ -59,16 +61,15 @@ print(f"Selected Classes: {random_classes}")
 random_files = []
 for cls in random_classes:
     class_folder = os.path.join(dataset_path, cls)
-    files_in_class = os.listdir(class_folder)
-    selected_file = random.choice(files_in_class)
-    file_path = os.path.join(class_folder, selected_file)
-    random_files.append(file_path)
+    # Filter to include only .wav files
+    files_in_class = [f for f in os.listdir(class_folder) if f.endswith('.wav')]
+    if files_in_class:  # Ensure the list is not empty
+        selected_file = random.choice(files_in_class)
+        file_path = os.path.join(class_folder, selected_file)
+        random_files.append(file_path)
 
 print(random_files)
 
-
-import matplotlib.pyplot as plt
-import librosa.display
 
 def plot_audio_representation(file_path, title):
     print(f"Loading file: {file_path}")
@@ -102,3 +103,18 @@ def plot_audio_representation(file_path, title):
 # Plot for each of the randomly selected files
 for i, file in enumerate(random_files):
     plot_audio_representation(file, f'File {i+1} from {random_classes[i]}')
+
+
+# c
+
+# Count the number of samples per class
+class_distribution = audio_features['Class'].value_counts()
+
+# Plot the distribution
+plt.figure(figsize=(12, 6))
+class_distribution.plot(kind='bar')
+plt.title('Class Distribution')
+plt.xlabel('Class')
+plt.ylabel('Number of Samples')
+plt.xticks(rotation=90)
+plt.show()
