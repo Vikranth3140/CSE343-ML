@@ -47,7 +47,17 @@ def extract_hog_features(image_path):
     image = cv2.resize(image, (256, 256))
     blur_image = cv2.GaussianBlur(image, (11,11), 0)
     features, _ = hog(blur_image, pixels_per_cell=(8, 8), block_norm='L2-Hys', visualize=True)
-    return features
+    
+    # Compute mean, median, variance of HOG features
+    mean_hog = np.mean(features)
+    median_hog = np.median(features)
+    var_hog = np.var(features)
+    
+    # Add these statistics to the HOG features
+    hog_stats = np.array([mean_hog, median_hog, var_hog])
+    combined_hog_features = np.concatenate([features, hog_stats])
+    
+    return combined_hog_features
 
 def extract_lbp_features(image_path, radius=1, n_points=8):
     image = cv2.imread(image_path)
@@ -134,18 +144,14 @@ y = label_encoder.fit_transform(labels_df['label'])
 
 # Train-test split
 # First, select 6000 samples with stratification
-X_6000, _, y_6000, _ = train_test_split(X, y, train_size=6000, stratify=y, random_state=42)
-
-# Now, split these 6000 samples into training and testing sets, e.g., 80% train and 20% test
-X_train, X_test, y_train, y_test = train_test_split(X_6000, y_6000, train_size=0.8, stratify=y_6000, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=42)
 
 # Initialize and train the Random Forest model with the provided best parameters
 best_rf_params = {
-    'bootstrap': True,
-    'max_depth': 20,
+    'max_depth': 25,
     'min_samples_leaf': 2,
-    'min_samples_split': 10,
-    'n_estimators': 500
+    'min_samples_split': 5,
+    'n_estimators': 1000
 }
 
 rf = RandomForestClassifier(**best_rf_params, random_state=42)
