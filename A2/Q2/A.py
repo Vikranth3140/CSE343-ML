@@ -58,9 +58,10 @@ print(f"Selected Classes: {random_classes}")
 # Select 1 random file from each class
 random_files = []
 for cls in random_classes:
-    class_files = audio_features[audio_features['Class'] == cls]
-    selected_file = class_files.sample(n=1).index[0]
-    file_path = os.path.join(dataset_path, cls, selected_file)
+    class_folder = os.path.join(dataset_path, cls)
+    files_in_class = os.listdir(class_folder)
+    selected_file = random.choice(files_in_class)
+    file_path = os.path.join(class_folder, selected_file)
     random_files.append(file_path)
 
 print(random_files)
@@ -70,6 +71,7 @@ import matplotlib.pyplot as plt
 import librosa.display
 
 def plot_audio_representation(file_path, title):
+    print(f"Loading file: {file_path}")
     y, sr = librosa.load(file_path, sr=16000)
 
     plt.figure(figsize=(14, 8))
