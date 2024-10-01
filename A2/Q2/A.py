@@ -118,3 +118,34 @@ plt.xlabel('Class')
 plt.ylabel('Number of Samples')
 plt.xticks(rotation=90)
 plt.show()
+
+
+# d
+
+# Define a threshold to detect silence
+silent_threshold = 0.001
+
+# Store files that are identified as silent or having very low amplitude
+silent_files = []
+
+# Iterate through each file in the dataset and detect silent files
+for foldername in os.listdir(dataset_path):
+    folder_path = os.path.join(dataset_path, foldername)
+    if os.path.isdir(folder_path):
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.wav'):
+                file_path = os.path.join(folder_path, filename)
+                y, sr = librosa.load(file_path, sr=16000)
+                # Calculate the mean absolute amplitude to detect silence
+                mean_amplitude = np.mean(np.abs(y))
+                # If mean amplitude is below the threshold, consider it a silent file
+                if mean_amplitude < silent_threshold:
+                    silent_files.append(file_path)
+
+# Print the results
+print(f"Detected {len(silent_files)} silent or low-amplitude files.")
+print("List of silent files:", silent_files)
+
+# Remove the silent files
+for file in silent_files:
+    os.remove(file)
