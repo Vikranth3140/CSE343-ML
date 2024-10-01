@@ -9,6 +9,7 @@ os.makedirs('Plots', exist_ok=True)
 labels_df = pd.read_csv('label.csv')
 
 image_directory = 'data'
+# image_directory = '../../../../Documents/data'
 
 # Extract HOG features
 def extract_hog_features(image_path):

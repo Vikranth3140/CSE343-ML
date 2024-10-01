@@ -1,0 +1,2 @@
+*.pkl filter=lfs diff=lfs merge=lfs -text
+A2/Q3/C/extracted_features_pca.csv filter=lfs diff=lfs merge=lfs -text
