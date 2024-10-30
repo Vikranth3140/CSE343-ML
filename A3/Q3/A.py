@@ -45,4 +45,7 @@ for i, ax in enumerate(axes.flatten()):
 
 plt.tight_layout()
 plt.subplots_adjust(top=0.85)
+
+# Save the figure
+fig.savefig("ramdon_images.png")
 plt.show()
