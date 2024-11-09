@@ -97,6 +97,7 @@ class NeuralNetwork:
             self.biases[i] -= self.lr * grads_b[i]
 
     def fit(self, X, Y):
+        epoch_loss = None  # Initialize loss variable
         for epoch in range(self.epochs):
             indices = np.arange(X.shape[0])
             np.random.shuffle(indices)
@@ -110,12 +111,14 @@ class NeuralNetwork:
                 grads_w, grads_b = self.backward(X_batch, Y_batch, activations, zs)
                 self.update_parameters(grads_w, grads_b)
 
-            # Calculate and print loss for the current epoch
-            # Use Y_batch for calculating loss for each batch, or calculate it after each epoch on the entire dataset
-            # Here, I calculate loss only for the last batch of the epoch for simplicity.
-            if (epoch + 1) % 10 == 0 or epoch == 0:
-                batch_loss = -np.mean(np.sum(Y_batch * np.log(activations[-1] + 1e-8), axis=1))
-                print(f"Epoch {epoch + 1}/{self.epochs}, Loss: {batch_loss:.4f}")
+            # Calculate epoch loss for the entire dataset at the end of each epoch
+            full_activations, _ = self.forward(X)
+            epoch_loss = -np.mean(np.sum(Y * np.log(full_activations[-1] + 1e-8), axis=1))
+            print(f"Epoch {epoch + 1}/{self.epochs}, Loss: {epoch_loss:.4f}")
+        
+        # Return the final epoch loss to be stored in train_loss_history
+        return epoch_loss
+
 
     def predict(self, X):
         activations, _ = self.forward(X)
