@@ -110,10 +110,12 @@ class NeuralNetwork:
                 grads_w, grads_b = self.backward(X_batch, Y_batch, activations, zs)
                 self.update_parameters(grads_w, grads_b)
 
-            # Optionally print the loss every epoch
+            # Calculate and print loss for the current epoch
+            # Use Y_batch for calculating loss for each batch, or calculate it after each epoch on the entire dataset
+            # Here, I calculate loss only for the last batch of the epoch for simplicity.
             if (epoch + 1) % 10 == 0 or epoch == 0:
-                loss = -np.mean(np.sum(Y * np.log(activations[-1]), axis=1))
-                print(f"Epoch {epoch + 1}/{self.epochs}, Loss: {loss:.4f}")
+                batch_loss = -np.mean(np.sum(Y_batch * np.log(activations[-1] + 1e-8), axis=1))
+                print(f"Epoch {epoch + 1}/{self.epochs}, Loss: {batch_loss:.4f}")
 
     def predict(self, X):
         activations, _ = self.forward(X)
