@@ -12,4 +12,4 @@
 
 ## About this repository
 
-This repository contains the solutions to all assignments given in the duration of the course.
+This repository contains comprehensive solutions to all course assignments, along with the final project developed over the duration of the course.
